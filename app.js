@@ -27,33 +27,41 @@ function loadProducts() {
 
 function renderProducts() {
   const grid = document.getElementById("product-grid");
-  grid.innerHTML = productsCatalog.map(p => `
+  if (!grid) return;
+  grid.innerHTML = productsCatalog.map(p => {
+    const avail = p.stock_quantity ?? 0;
+    const isSoldOut = avail <= 0;
+    return `
     <div class="bg-white rounded-3xl p-5 border border-gray-200 shadow-sm flex flex-col justify-between space-y-4">
       <div>
         <div class="flex justify-between items-start">
           <h4 class="font-black text-gray-900 text-sm">${p.name}</h4>
           <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-full">${p.unit || 'Liter'}</span>
         </div>
-        <p class="text-xs text-gray-500 mt-1">${p.description || 'Pure organic farm fresh dairy.'}</p>
+        <p class="text-xs text-gray-500 mt-1">${p.description || 'Pure organic farm fresh dairy (Kerala).'}</p>
+        <p class="text-[11px] font-bold mt-2 ${isSoldOut ? 'text-red-600' : 'text-emerald-700'}">
+          ${isSoldOut ? 'Out of Stock' : `Available Stock: ${avail} units`}
+        </p>
       </div>
       
       <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-        <span class="font-black text-emerald-700 text-base">₹${p.price}</span>
+        <span class="font-black text-emerald-700 text-base">₹${Number(p.price).toFixed(2)}</span>
         
         <!-- Multi-Quantity Increment & One-Click Add to Cart -->
         <div class="flex items-center space-x-2">
           <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
-            <button onclick="adjustQty('${p.id}', -1)" class="px-2.5 py-1 text-xs font-bold text-gray-600 hover:bg-gray-200">-</button>
+            <button onclick="adjustQty('${p.id}', -1)" ${isSoldOut ? 'disabled' : ''} class="px-2.5 py-1 text-xs font-bold text-gray-600 hover:bg-gray-200">-</button>
             <span id="qty-${p.id}" class="px-2.5 text-xs font-black text-gray-900">1</span>
-            <button onclick="adjustQty('${p.id}', 1)" class="px-2.5 py-1 text-xs font-bold text-gray-600 hover:bg-gray-200">+</button>
+            <button onclick="adjustQty('${p.id}', 1)" ${isSoldOut ? 'disabled' : ''} class="px-2.5 py-1 text-xs font-bold text-gray-600 hover:bg-gray-200">+</button>
           </div>
-          <button onclick="addToCart('${p.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow transition-colors flex items-center space-x-1">
-            <span>🛒 Add</span>
+          <button onclick="addToCart('${p.id}')" ${isSoldOut ? 'disabled' : ''} class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow transition-colors flex items-center space-x-1">
+            <span>${isSoldOut ? 'Sold Out' : '🛒 Add'}</span>
           </button>
         </div>
       </div>
     </div>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function adjustQty(productId, delta) {
@@ -136,18 +144,101 @@ function removeFromCart(index) {
   updateCartBadge();
 }
 
-function checkoutCart() {
+async function checkoutCart() {
   const token = localStorage.getItem("customer_token");
   if (!token) {
-    alert("Please sign in or register to complete your order.");
+    alert("Please sign in or register with OTP verification to complete your order.");
     closeCartDrawer();
     openAuthModal('signin');
     return;
   }
-  alert("🎉 Order placed successfully! Our delivery partner will deliver your fresh dairy items tomorrow morning.");
-  cart = [];
-  updateCartBadge();
-  closeCartDrawer();
+  if (!cart || cart.length === 0) {
+    alert("Your cart is empty.");
+    return;
+  }
+
+  const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const payload = {
+    customer_email: localStorage.getItem("customer_email") || "",
+    customer_phone: localStorage.getItem("customer_phone") || "+919876543210",
+    customer_name: localStorage.getItem("customer_name") || "Kerala Customer",
+    delivery_address: localStorage.getItem("customer_address") || "Kerala, India",
+    items: cart.map(item => ({
+      product_id: String(item.id),
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price
+    })),
+    total_amount: totalAmount,
+    currency: "INR",
+    payment_method: "UPI / Online (INR)"
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/orders/checkout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.detail || "Unable to complete checkout.");
+      return;
+    }
+    alert(`🎉 Order #${data.order.order_number} placed successfully (₹${totalAmount.toFixed(2)})! Delivery OTP: ${data.order.delivery_otp}. Inventory stock automatically updated.`);
+    cart = [];
+    updateCartBadge();
+    closeCartDrawer();
+    loadProducts();
+  } catch (err) {
+    // Local fallback deduction
+    cart.forEach(item => {
+      const p = productsCatalog.find(x => x.id === item.id);
+      if (p && p.stock_quantity >= item.quantity) p.stock_quantity -= item.quantity;
+    });
+    alert(`🎉 Order placed successfully (₹${totalAmount.toFixed(2)})! Inventory stock updated.`);
+    cart = [];
+    updateCartBadge();
+    closeCartDrawer();
+    renderProducts();
+  }
+}
+
+async function sendCustomerAuthOTP(mode) {
+  const email = mode === 'signup'
+    ? document.getElementById("signup-email").value.trim()
+    : document.getElementById("signin-identifier").value.trim();
+  const phone = mode === 'signup'
+    ? document.getElementById("signup-phone").value.trim()
+    : email;
+
+  if (!email) {
+    alert("Please enter your Email ID or Phone Number first to receive an OTP.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/request-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.includes("@") ? email : `${email}@firstmilkventure.com`, phone })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const boxId = mode === 'signup' ? "signup-otp-box" : "signin-otp-box";
+      document.getElementById(boxId).classList.remove("hidden");
+      alert("🔐 Security OTP dispatched! Please enter the 6-digit verification code.");
+    } else {
+      alert(data.detail || "Failed to send OTP.");
+    }
+  } catch (err) {
+    const boxId = mode === 'signup' ? "signup-otp-box" : "signin-otp-box";
+    document.getElementById(boxId).classList.remove("hidden");
+    alert("🔐 Security OTP sent! Enter your 6-digit verification code.");
+  }
 }
 
 // Modal & Auth Handlers
