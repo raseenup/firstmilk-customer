@@ -1,3 +1,206 @@
+const API_BASE = window.FMV_API_URL || "http://localhost:8000";
+let products = [
+{ id: "PROD-001", name: "Farm Fresh A2 Cow Milk (1L)", category: "Fresh Milk", price_inr: 75.00, stock_qty: 250, origin: "Kottayam Dairy Farm, Kerala" },
+{ id: "PROD-002", name: "Organic Homogenized Toned Milk (500ml)", category: "Fresh Milk", price_inr: 32.00, stock_qty: 400, origin: "Trivandrum Cooperative, Kerala" },
+{ id: "PROD-003", name: "Malabar Artisanal Cultured Curd (500g)", category: "Dairy Products", price_inr: 48.00, stock_qty: 180, origin: "Kochi Processing Unit, Kerala" },
+{ id: "PROD-004", name: "Pure Desi Cow Ghee (500ml Jar)", category: "Ghee & Butter", price_inr: 420.00, stock_qty: 95, origin: "Wayanad Organic Farms, Kerala" },
+{ id: "PROD-005", name: "Fresh Malai Paneer (200g)", category: "Paneer & Cheese", price_inr: 95.00, stock_qty: 120, origin: "Ernakulam Dairy Hub, Kerala" }
+];
+let cart = JSON.parse(localStorage.getItem("fmv_cart") || "[]");
+let currentUser = JSON.parse(localStorage.getItem("fmv_user") || "null");
+let authToken = localStorage.getItem("fmv_token") || "";
+function formatINR(amount) {
+return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
+}
+async function fetchProducts() {
+try {
+const res = await fetch(${API_BASE}/products);
+if (res.ok) {
+const data = await res.json();
+products = data.products;
+}
+} catch (e) {
+console.warn("Running with local Kerala catalog cache");
+}
+renderCatalog();
+populateSubscriptionProducts();
+}
+function renderCatalog() {
+const grid = document.getElementById("product-grid");
+grid.innerHTML = products.map(p => <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between"> <div> <div class="flex justify-between items-start mb-2"> <span class="text-xs font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">${p.category}</span> <span class="text-xs ${p.stock_qty > 0 ? "text-slate-500" : "text-red-600 font-bold"}"> ${p.stock_qty > 0 ?${p.stock_qty} in stock: "Out of Stock"} </span> </div> <h3 class="font-bold text-lg text-slate-900">${p.name}</h3> <p class="text-xs text-slate-500 mt-1">${p.origin}</p> </div> <div class="mt-4 pt-3 border-t flex items-center justify-between"> <span class="text-xl font-extrabold text-emerald-800">${formatINR(p.price_inr)}</span> <button onclick="addToCart('${p.id}')" ${p.stock_qty <= 0 ? "disabled" : ""} class="bg-emerald-700 hover:bg-emerald-800 disabled:bg-slate-300 text-white text-sm font-semibold px-4 py-2 rounded-lg"> Add to Basket </button> </div> </div>).join("");
+}
+function addToCart(productId) {
+const prod = products.find(p => p.id === productId);
+if (!prod || prod.stock_qty <= 0) return;
+const existing = cart.find(item => item.product_id === productId);
+if (existing) {
+if (existing.quantity < prod.stock_qty) existing.quantity += 1;
+} else {
+cart.push({ product_id: prod.id, name: prod.name, price_inr: prod.price_inr, quantity: 1 });
+}
+saveCart();
+}
+function saveCart() {
+localStorage.setItem("fmv_cart", JSON.stringify(cart));
+updateCartUI();
+}
+function updateCartUI() {
+const count = cart.reduce((acc, item) => acc + item.quantity, 0);
+document.getElementById("cart-count").textContent = count;
+const itemsEl = document.getElementById("cart-items");
+let total = 0;
+itemsEl.innerHTML = cart.length ? cart.map((item, idx) => {
+const sub = item.price_inr * item.quantity;
+total += sub;
+return <div class="py-3 flex justify-between items-center"> <div> <p class="font-semibold text-sm">${item.name}</p> <p class="text-xs text-slate-500">${formatINR(item.price_inr)} x ${item.quantity}</p> </div> <div class="flex items-center gap-2"> <span class="font-bold text-sm">${formatINR(sub)}</span> <button onclick="removeFromCart(${idx})" class="text-red-500 text-xs px-2 py-1 border rounded">Remove</button> </div> </div>;
+}).join("") : <p class="text-sm text-slate-500 py-6 text-center">Your basket is empty.</p>;
+document.getElementById("cart-total").textContent = formatINR(total);
+}
+function removeFromCart(index) {
+cart.splice(index, 1);
+saveCart();
+}
+function toggleCart() {
+document.getElementById("cart-drawer").classList.toggle("hidden");
+}
+function showSection(name) {
+["catalog", "subscriptions", "orders"].forEach(sec => {
+document.getElementById(section-${sec}).classList.toggle("hidden", sec !== name);
+});
+if (name === "orders") loadOrders();
+if (name === "subscriptions") loadSubscriptions();
+}
+// OTP Modal Handlers
+function openAuthModal() {
+document.getElementById("auth-modal").classList.remove("hidden");
+}
+function closeAuthModal() {
+document.getElementById("auth-modal").classList.add("hidden");
+}
+async function requestOTP() {
+const email = document.getElementById("otp-email").value.trim();
+const name = document.getElementById("otp-name").value.trim();
+const city = document.getElementById("city-selector").value;
+if (!email) return alert("Please enter a valid email address.");
+try {
+const res = await fetch(${API_BASE}/auth/request-otp, {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ email, name, city, purpose: name ? "signup" : "login" })
+});
+const data = await res.json();
+if (res.ok) {
+document.getElementById("otp-step-1").classList.add("hidden");
+document.getElementById("otp-step-2").classList.remove("hidden");
+document.getElementById("otp-sent-msg").textContent = data.dev_otp_preview
+? OTP Sent! (Dev Preview Code: ${data.dev_otp_preview})
+: 6-digit OTP sent to ${email};
+} else {
+alert(data.detail || "Failed to send OTP");
+}
+} catch (err) {
+alert("Backend offline. Start FastAPI server to verify OTP.");
+}
+}
+async function verifyOTP() {
+const email = document.getElementById("otp-email").value.trim();
+const otp = document.getElementById("otp-code").value.trim();
+const name = document.getElementById("otp-name").value.trim();
+const city = document.getElementById("city-selector").value;
+const res = await fetch(${API_BASE}/auth/verify-otp, {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ email, otp, name, city })
+});
+const data = await res.json();
+if (res.ok) {
+currentUser = data.user;
+authToken = data.access_token;
+localStorage.setItem("fmv_user", JSON.stringify(currentUser));
+localStorage.setItem("fmv_token", authToken);
+updateAuthHeader();
+closeAuthModal();
+} else {
+alert(data.detail || "Invalid OTP code");
+}
+}
+function updateAuthHeader() {
+const btn = document.getElementById("auth-btn");
+if (currentUser) {
+btn.textContent = ${currentUser.name} (${currentUser.region.split(",")[0]});
+}
+}
+async function placeOrder() {
+if (!cart.length) return alert("Your basket is empty.");
+if (!currentUser) {
+toggleCart();
+return openAuthModal();
+}
+const address = document.getElementById("checkout-address").value.trim();
+const city = document.getElementById("city-selector").value;
+const payment = document.getElementById("checkout-payment").value;
+if (!address) return alert("Please enter your Kerala delivery address.");
+const res = await fetch(${API_BASE}/orders, {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+"Authorization": Bearer ${authToken}
+},
+body: JSON.stringify({
+customer_email: currentUser.email,
+customer_name: currentUser.name,
+delivery_address: address,
+city,
+payment_method: payment,
+items: cart.map(c => ({ product_id: c.product_id, quantity: c.quantity }))
+})
+});
+const data = await res.json();
+if (res.ok) {
+cart = [];
+saveCart();
+toggleCart();
+await fetchProducts();
+alert(Order ${data.order.order_id} confirmed! Total: ${data.order.formatted_total});
+showSection("orders");
+} else {
+alert(data.detail || "Unable to place order");
+}
+}
+async function loadOrders() {
+if (!currentUser) return;
+const res = await fetch(${API_BASE}/orders?customer_email=${encodeURIComponent(currentUser.email)});
+const data = await res.json();
+const container = document.getElementById("orders-list");
+container.innerHTML = data.orders.length ? data.orders.map(o => <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm"> <div class="flex justify-between items-center mb-2"> <span class="font-bold text-emerald-800">${o.order_id}</span> <span class="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800">${o.status}</span> </div> <p class="text-sm text-slate-600">${o.delivery_address}, ${o.city}, Kerala</p> <p class="text-sm font-bold mt-2">Total: ${o.formatted_total} (${o.payment_method})</p> </div>).join("") : <p class="text-slate-500 text-sm">No orders found yet.</p>;
+}
+function populateSubscriptionProducts() {
+const sel = document.getElementById("sub-product");
+sel.innerHTML = products.map(p => <option value="${p.id}">${p.name} - ${formatINR(p.price_inr)}</option>).join("");
+}
+async function createSubscription() {
+if (!currentUser) return openAuthModal();
+const product_id = document.getElementById("sub-product").value;
+const quantity = parseInt(document.getElementById("sub-qty").value, 10);
+const frequency = document.getElementById("sub-freq").value;
+const city = document.getElementById("city-selector").value;
+const res = await fetch(${API_BASE}/subscriptions, {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ customer_email: currentUser.email, product_id, quantity, frequency, city })
+});
+if (res.ok) {
+alert("Subscription activated!");
+loadSubscriptions();
+}
+}
+async function loadSubscriptions() {
+if (!currentUser) return;
+const res = await fetch(${API_BASE}/subscriptions?customer_email=${encodeURIComponent(currentUser.email)});
+const data = await res.json();
+document.getElementById("subscription-list").innerHTML = data.subscriptions.map(s => <div class="bg-white p-4 rounded-xl border flex justify-between items-center"> <div> <p class="font-bold">${s.product_name} (x${s.quantity})</p> <p class="text-xs text-slate-500">${s.frequency} • ${s.delivery_slot} • ${s.city}</p> </div> <span class="font-bold text-emerald-700">${formatINR(s.daily_cost_inr)} / delivery</span> </div>).join("");
+}
+
 const API_BASE_URL = "https://backend.firstmilkventure.com";
 let cart = [];
 let productsCatalog = [
