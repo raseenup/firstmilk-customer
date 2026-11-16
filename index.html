@@ -1,12 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://backend.firstmilkventure.com https://api.razorpay.com; frame-src https://api.razorpay.com https://checkout.razorpay.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta name="referrer" content="same-origin">
+    <link rel="stylesheet" href="portal.css">
+    <script src="config.js"></script>
+    <script src="portal-core.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>First Milk Venture - Fresh Daily Dairy Delivery Platform</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Original Tailwind CDN script retained as a reference; v8 uses local compiled CSS. -->
+    <link rel="stylesheet" href="tailwind.css">
 </head>
-<body class="bg-gray-50 font-sans min-h-screen pb-24">
+<body data-portal="customer" class="bg-gray-50 font-sans min-h-screen pb-24">
     <!-- Top Header Bar -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -62,7 +68,7 @@
                 <span class="text-red-400 font-black">📍</span>
                 <div>
                     <span class="text-[10px] text-emerald-300 block uppercase font-bold">Delivery Location</span>
-                    <span id="user-location-label" class="font-bold">Jeddah / Kerala (Editable)</span>
+                    <span id="user-location-label" class="font-bold">Kochi, Kerala / Kerala (Editable)</span>
                 </div>
             </div>
         </div>
@@ -108,7 +114,7 @@
                 <div>
                     <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Enterprise Customer Portal Suite</span>
                     <h3 class="text-lg font-black text-gray-900 mt-1">Self-Service, Commerce, Billing, Document Vault & Admin</h3>
-                    <p class="text-xs text-gray-500">Unified B2B & B2C workspace with RBAC, Quote-to-Order, ZATCA e-Invoicing, AI Support & ERP Sync</p>
+                    <p class="text-xs text-gray-500">Unified B2B & B2C workspace with RBAC, Quote-to-Order, India invoicing, AI Support & ERP Sync</p>
                 </div>
                 <div class="flex flex-wrap gap-1.5 text-[11px] font-bold">
                     <button onclick="openPortalHub('security-rbac')" id="ptab-security-rbac" class="portal-tab-btn px-3 py-2 rounded-xl bg-emerald-600 text-white shadow-sm">1. Security & RBAC</button>
@@ -135,11 +141,11 @@
                                 <span class="font-bold text-gray-900">30 Mins Auto-Lock</span>
                             </div>
                             <div class="flex justify-between items-center bg-white p-2.5 rounded-xl border">
-                                <span>Enterprise SSO Federation</span>
+                                <span>External SSO · setup required</span>
                                 <span class="text-emerald-700 font-bold">SAML 2.0 / OIDC Ready</span>
                             </div>
                         </div>
-                        <button onclick="openEditProfileModal()" class="w-full bg-gray-900 text-white text-xs font-bold py-2 rounded-xl">Manage VAT/Tax ID & Notification Prefs</button>
+                        <button onclick="openEditProfileModal()" class="w-full bg-gray-900 text-white text-xs font-bold py-2 rounded-xl">Manage GST/tax ID & Notification Prefs</button>
                     </div>
 
                     <div class="lg:col-span-2 bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-3">
@@ -175,11 +181,11 @@
                         <div class="grid grid-cols-2 gap-2 text-xs">
                             <select id="ticket-category" class="px-2.5 py-2 border rounded-xl bg-white">
                                 <option value="delivery">Cold-Chain Delivery</option>
-                                <option value="billing">Billing & ZATCA</option>
+                                <option value="billing">Billing & GST</option>
                                 <option value="product_quality">Product Quality</option>
                                 <option value="technical">Portal / API</option>
                             </select>
-                            <input type="text" id="ticket-attachment" placeholder="Attachment filename (e.g. proof.jpg)" class="px-2.5 py-2 border rounded-xl bg-white">
+                            <input type="file" id="ticket-attachment" accept="application/pdf,image/jpeg,image/png,text/plain" class="w-full px-3 py-2 border rounded-xl">
                         </div>
                         <textarea id="ticket-desc" rows="2" placeholder="Describe your request..." class="w-full px-3 py-2 border rounded-xl text-xs bg-white"></textarea>
                         <button onclick="submitPortalTicket()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded-xl text-xs">Submit Support Ticket</button>
@@ -200,7 +206,7 @@
                             <button onclick="escalateChatToHuman()" class="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-1 rounded-lg">Escalate to Human</button>
                         </div>
                         <div id="ai-chat-feed" class="bg-white border rounded-xl p-3 h-36 overflow-y-auto space-y-2 text-xs">
-                            <div class="bg-emerald-50 text-emerald-900 p-2 rounded-lg">🤖 <strong>AI Assistant:</strong> Ask me about ZATCA e-invoices, contract pricing, order tracking, or RMA returns!</div>
+                            <div class="bg-emerald-50 text-emerald-900 p-2 rounded-lg">🤖 <strong>AI Assistant:</strong> Ask me about India invoices, contract pricing, order tracking, or RMA returns!</div>
                         </div>
                         <div class="flex space-x-2 text-xs">
                             <input type="text" id="ai-chat-input" placeholder="Ask a question..." class="flex-1 px-3 py-2 border rounded-xl bg-white">
@@ -242,11 +248,11 @@
                             <p class="text-[11px] text-gray-500">Cold-Chain Truck #KSA-4412 • Scheduled Window: 05:30 - 06:30 AM</p>
                             <div class="flex space-x-2 pt-1">
                                 <button onclick="oneClickReorder('FMV-8821')" class="flex-1 bg-emerald-600 text-white font-bold py-1.5 rounded-lg text-[11px]">↻ 1-Click Reorder</button>
-                                <button onclick="alert('Tracking Link: https://delivery.firstmilkventure.com/track/FMV-8821 (Temp: 3.4°C)')" class="flex-1 bg-gray-100 text-gray-800 font-bold py-1.5 rounded-lg text-[11px]">Live Shipment Map</button>
+                                <button onclick="showCustomerTracking()" class="flex-1 bg-gray-100 text-gray-800 font-bold py-1.5 rounded-lg text-[11px]">Live Shipment Map</button>
                             </div>
                         </div>
                         <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-xs">
-                            <span class="font-bold text-emerald-900 block">Contract Tier Active: Enterprise Gold (10% Off)</span>
+                            <span class="font-bold text-emerald-900 block">Catalog pricing: Current INR prices apply</span>
                             <span class="text-[11px] text-emerald-700">Real-time ERP stock visibility enabled across all catalog SKUs.</span>
                         </div>
                     </div>
@@ -275,8 +281,8 @@
                     <div class="lg:col-span-2 bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-3">
                         <div class="flex justify-between items-center">
                             <div>
-                                <h4 class="font-black text-xs text-gray-900 uppercase tracking-wider">ZATCA / VAT Tax Invoice, Credit Notes & SOA Repository</h4>
-                                <p class="text-[11px] text-gray-500">Compliant PDF/XML e-invoices with online Card, IBAN/ACH, Digital Wallet & Autopay</p>
+                                <h4 class="font-black text-xs text-gray-900 uppercase tracking-wider">India GST Tax Invoice, Credit Notes & SOA Repository</h4>
+                                <p class="text-[11px] text-gray-500">Sales invoices and account statements. Online payments use the configured payment gateway.</p>
                             </div>
                             <button onclick="downloadSOAStatement()" class="bg-gray-900 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl">⬇ Export SOA</button>
                         </div>
@@ -518,13 +524,13 @@
                         <input type="text" id="edit-company-name" placeholder="Enterprise Partner Ltd." class="w-full px-3 py-2 border rounded-xl">
                     </div>
                     <div>
-                        <label class="block font-bold text-gray-700 mb-1">Tax / VAT / GST Reg. No.</label>
-                        <input type="text" id="edit-tax-id" placeholder="300123456700003" class="w-full px-3 py-2 border rounded-xl">
+                        <label class="block font-bold text-gray-700 mb-1">GST registration number</label>
+                        <input type="text" id="edit-tax-id" placeholder="Your GSTIN, if registered" class="w-full px-3 py-2 border rounded-xl">
                     </div>
                 </div>
                 <div>
                     <label class="block font-bold text-gray-700 mb-1">Billing Address (for Tax Invoices)</label>
-                    <input type="text" id="edit-billing-address" placeholder="King Abdulaziz Rd, Jeddah" class="w-full px-3 py-2 border rounded-xl">
+                    <input type="text" id="edit-billing-address" placeholder="King Abdulaziz Rd, Kochi, Kerala" class="w-full px-3 py-2 border rounded-xl">
                 </div>
                 <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
                     <span class="block font-bold text-gray-700 mb-1">Notification Preferences</span>
