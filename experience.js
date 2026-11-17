@@ -16,7 +16,7 @@
     for(const element of document.querySelectorAll('[data-customer-area]'))element.hidden=element.dataset.customerArea!==area;
     for(const element of document.querySelectorAll('[data-profile-area]'))element.hidden=area!=='profile' || element.dataset.profileArea!==subarea;
     setCustomerNavigation(area);
-    if(area==='home'){const hasBanners=state.campaigns.some(c=>c.placement==='home' && c.kind==='banner');$('fmv-banner-slot').hidden=!hasBanners;document.querySelector('.customer-hero').hidden=hasBanners;$('fmv-home-posts').hidden=!state.campaigns.some(c=>c.placement==='home' && c.kind!=='banner');}
+    if(area==='home'){const hasBanners=state.campaigns.some(c=>c.placement==='home' && c.kind==='banner');$('fmv-banner-slot').hidden=!hasBanners;document.querySelector('.customer-hero').hidden=hasBanners;$('fmv-home-posts').hidden=!state.campaigns.some(c=>c.placement==='home' && c.kind!=='banner');$('fmv-location-ads').hidden=!state.campaigns.some(c=>c.placement==='home_location');}
     if(area==='profile'){
       renderIdentity();
       $('fmv-profile-back').hidden=subarea==='menu';
@@ -100,7 +100,7 @@
     let media='';
     if(src && (!motion.matches || !animated))media=video?`<video src="${e(src)}" muted loop playsinline controls preload="metadata" ${motion.matches?'':'autoplay'} aria-label="${e(item.alt_text || item.title)}"></video>`:`<img src="${e(src)}" alt="${e(item.alt_text || item.title)}" loading="lazy">`;
     else if(src)media=`<button type="button" class="fmv-play-media" data-fmv-action="play-media" data-id="${e(item.id)}">Play ${video?'video':'animation'} · ${e(item.title)}</button>`;
-    return `<article class="fmv-campaign" data-animation="${motion.matches?'none':e(item.animation)}" data-campaign-id="${e(item.id)}">${media}<div class="fmv-campaign-copy"><span class="customer-eyebrow">${e(item.kind==='menu'?'Fresh picks':item.kind==='offer'?'FMV offers':'First Milk Venture')}</span><h3>${e(item.title)}</h3><p>${e(item.description)}</p>${item.terms?`<small>${e(item.terms)}</small>`:''}<button type="button" class="fmv-btn" data-fmv-action="campaign-link" data-target="${e(item.cta_path)}">${e(item.cta_label || 'Explore')} <span aria-hidden="true">↗</span></button></div></article>`;
+    return `<article class="fmv-campaign" data-animation="${motion.matches?'none':e(item.animation)}" data-campaign-id="${e(item.id)}" style="--campaign-width:${Number(item.display_width) || 1200}px;--campaign-ratio:${Number(item.display_width) || 1200}/${Number(item.display_height) || 300};--campaign-fit:${item.media_fit==='cover'?'cover':'contain'}">${media}<div class="fmv-campaign-copy"><span class="customer-eyebrow">${e(item.kind==='menu'?'Fresh picks':item.kind==='offer'?'FMV offers':'First Milk Venture')}</span><h3>${e(item.title)}</h3><p>${e(item.description)}</p>${item.terms?`<small>${e(item.terms)}</small>`:''}<button type="button" class="fmv-btn" data-fmv-action="campaign-link" data-target="${e(item.cta_path)}">${e(item.cta_label || 'Explore')} <span aria-hidden="true">↗</span></button></div></article>`;
   }
 
   async function refreshCampaigns(supplied){
@@ -113,6 +113,7 @@
     $('fmv-banner-controls').hidden=banners.length<2;
     $('fmv-home-posts').innerHTML=home.map(campaignMarkup).join('');
     $('fmv-home-posts').hidden=!home.length;
+    const locationAds=state.campaigns.filter(c=>c.placement==='home_location');$('fmv-location-ads').innerHTML=locationAds.map(campaignMarkup).join('');$('fmv-location-ads').hidden=state.area!=='home' || !locationAds.length;
     const offers=state.campaigns.filter(c=>c.placement==='offers' || c.kind==='offer');
     $('fmv-offers-grid').innerHTML=offers.map(campaignMarkup).join('') || customerEmpty('Fresh offers are on their way','Published offers and seasonal posts will appear here.');
     const hero=document.querySelector('.customer-hero');hero.hidden=state.area!=='home' || banners.length>0;
@@ -142,7 +143,7 @@
     const address=document.createElement('div');address.id='fmv-checkout-address-box';address.className='fmv-checkout-address-box';address.innerHTML='<label for="fmv-checkout-address">Deliver this order to</label><select id="fmv-checkout-address" required></select><p id="fmv-checkout-recipient" class="fmv-small"></p><button type="button" class="fmv-btn secondary" data-fmv-action="checkout-addresses">Manage saved addresses</button>';$('customer-checkout').before(address);
     $('fmv-address-form').addEventListener('submit',saveAddress);
     $('fmv-checkout-address').addEventListener('change',event=>{state.selectedAddress=event.target.value;saveFmvCart();renderAddressSelect();renderIdentity();});
-    const locationButton=document.querySelector('.customer-location-bar button');locationButton.removeAttribute('onclick');locationButton.textContent='Change address →';locationButton.addEventListener('click',()=>navigate('profile','addresses'));
+    $('fmv-location-ads').dataset.customerArea='home';
     document.querySelector('.customer-bottom-nav [data-customer-tab="profile"]').setAttribute('onclick',"switchTab('profile')");
     $('edit-address').closest('div').hidden=true;
     renderIdentity();
