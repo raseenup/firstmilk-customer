@@ -1,0 +1,36 @@
+/* Three order sections, order conversations/reviews and profile preferences. */
+(() => {
+  'use strict';
+  const e=value=>FMV.escape(value);let section='recent',orders=[];
+  const group=order=>order.status==='Delivered'?'delivered':order.status==='Cancelled'?'cancelled':'recent';
+  function update(items){orders=items;for(const button of document.querySelectorAll('[data-order-section]')){const key=button.dataset.orderSection;button.setAttribute('aria-selected',String(section===key));button.querySelector('span').textContent=items.filter(o=>group(o)===key).length;}}
+  function actions(order){
+    const unread=FMVWorkspace.snapshot?.chat_unread?.[order.id] || 0;
+    return `<button type="button" class="fmv-btn secondary" data-workspace-action="chat" data-order-id="${e(order.id)}">Order chat${unread?' ('+Number(unread)+')':''}</button>${order.status==='Delivered'?`<button type="button" class="fmv-btn secondary" data-customer-action="rate" data-order-id="${e(order.id)}">Rate delivery</button>`:''}`;
+  }
+  function pinAddress(id){
+    const item=FMVWorkspace.snapshot?.addresses?.find(a=>a.id===id) || {};
+    const form=FMVWorkspace.form('Pin delivery location',`<p>Save coordinates for this delivery address. They apply to future orders. Only use current location while you are at that address.</p><label>Latitude<input name="latitude" type="number" min="-90" max="90" step="any" value="${item.latitude ?? ''}" required></label><label>Longitude<input name="longitude" type="number" min="-180" max="180" step="any" value="${item.longitude ?? ''}" required></label><button type="button" class="fmv-btn secondary" id="fmv-customer-location">Use current location</button>`,async element=>{
+      await FMV.request('/users/me/addresses/'+encodeURIComponent(id)+'/location',{method:'PATCH',body:{latitude:Number(element.elements.latitude.value),longitude:Number(element.elements.longitude.value)}});FMV.notice('Delivery location saved for future orders.');await refreshCustomer();
+    });
+    document.getElementById('fmv-customer-location').addEventListener('click',()=>FMV.guard(async()=>{
+      if(!navigator.geolocation)throw new Error('Location access is unavailable. Enter coordinates manually.');
+      const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{timeout:10000,enableHighAccuracy:true}));
+      form.elements.latitude.value=position.coords.latitude;form.elements.longitude.value=position.coords.longitude;
+    }));
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    const list=document.getElementById('dashboard-orders-list'),nav=document.createElement('div');nav.className='fmv-order-sections';nav.setAttribute('role','tablist');nav.setAttribute('aria-label','My order sections');
+    nav.innerHTML=['recent','delivered','cancelled'].map(key=>`<button type="button" role="tab" aria-controls="dashboard-orders-list" aria-selected="${key===section}" data-order-section="${key}">${key[0].toUpperCase()+key.slice(1)} <span>0</span></button>`).join('');list.before(nav);list.setAttribute('role','tabpanel');
+    const title=list.parentElement.querySelector('h3,h4');if(title)title.textContent='My orders';
+    const menu=document.querySelector('[data-profile-area="menu"]');if(menu){const settings=document.createElement('section');settings.className='fmv-work-card';settings.innerHTML='<h3>Display & notifications</h3>'+FMVWorkspace.settingsMarkup();menu.querySelector('.fmv-profile-logout').before(settings);}
+    document.addEventListener('click',event=>{
+      const tab=event.target.closest('[data-order-section]');if(tab){section=tab.dataset.orderSection;loadDashboardStatus({orders,subscriptions:fmvSubscriptions});return;}
+      const button=event.target.closest('[data-customer-action]');if(!button)return;
+      if(button.dataset.customerAction==='pin-address'){pinAddress(button.dataset.id);return;}
+      if(button.dataset.customerAction==='rate')FMVWorkspace.form('Rate this delivery','<label>Rating<select name="stars"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Fair</option><option value="2">2 — Poor</option><option value="1">1 — Very poor</option></select></label><label>Feedback<textarea name="comment" maxlength="1000" rows="3"></textarea></label>',async form=>{await FMV.request('/orders/'+encodeURIComponent(button.dataset.orderId)+'/rating',{method:'POST',body:{stars:Number(form.elements.stars.value),comment:form.elements.comment.value.trim()}});FMV.notice('Delivery rating saved.');});
+    });
+  });
+  document.addEventListener('fmv:locked',()=>{orders=[];section='recent';});
+  window.FMVOrders={update,filter:items=>items.filter(o=>group(o)===section),actions};
+})();
