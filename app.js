@@ -1148,7 +1148,7 @@ function renderProducts(){
 function adjustQty(id,delta){const el=document.getElementById('qty-'+id),p=productsCatalog.find(p=>p.id===id);if(el && p)el.textContent=Math.max(1,Math.min(p.stock_quantity || 1,Number(el.textContent)+delta));}
 function saveFmvCart(changed=true){
   if(changed)fmvCheckoutKey=null;
-  if(FMV.user)sessionStorage.setItem('fmv_cart_'+FMV.user.id,JSON.stringify({items:cart.map(i=>({id:i.id,quantity:i.quantity})),checkoutKey:fmvCheckoutKey}));
+  if(FMV.user)sessionStorage.setItem('fmv_cart_'+FMV.user.id,JSON.stringify({items:cart.map(i=>({id:i.id,quantity:i.quantity})),checkoutKey:fmvCheckoutKey,addressId:window.FMVExperience?.selectedAddress || ''}));
 }
 function addToCart(id){
   const p=productsCatalog.find(p=>p.id===id);if(!p)return;
@@ -1172,7 +1172,8 @@ async function checkoutCart(){
   fmvCheckoutBusy=true;const checkoutButton=document.getElementById('customer-checkout');if(checkoutButton){checkoutButton.disabled=true;checkoutButton.textContent='Placing your order…';}
   await FMV.guard(async()=>{
     fmvCheckoutKey ||= crypto.randomUUID().replaceAll('-','');saveFmvCart(false);
-    const body={items:cart.map(i=>({product_id:i.id,quantity:i.quantity})),delivery_address:FMV.user.address,currency:'INR',payment_method:FMV.val('fmv-payment-method') || 'COD'};
+    if(window.FMVExperience && !FMVExperience.selectedAddress)throw new Error('Choose a saved delivery address before placing your order.');
+    const body={items:cart.map(i=>({product_id:i.id,quantity:i.quantity})),address_id:window.FMVExperience?.selectedAddress || '',delivery_address:FMV.user.address,currency:'INR',payment_method:FMV.val('fmv-payment-method') || 'COD'};
     const result=await FMV.request('/orders/checkout',{method:'POST',headers:{'Idempotency-Key':fmvCheckoutKey},body});
     cart=[];fmvCheckoutKey=null;saveFmvCart(false);updateCartBadge();closeCartDrawer();
     FMV.notice('Order '+result.order.order_number+' placed. Delivery PIN: '+result.order.delivery_otp+'.');
@@ -1275,7 +1276,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   for(const button of document.querySelectorAll('.customer-bottom-nav [data-customer-tab]'))button.addEventListener('click',()=>setCustomerNavigation(button.dataset.customerTab));
   for(const tab of document.querySelectorAll('.portal-tab-btn'))tab.setAttribute('aria-selected',String(tab.id==='ptab-security-rbac'));
   for(const modal of document.querySelectorAll('#profile-modal,#search-modal,#cart-drawer')){
-    const observer=new MutationObserver(()=>{if(modal.classList.contains('hidden'))setCustomerNavigation('home');});observer.observe(modal,{attributes:true,attributeFilter:['class']});
+    const observer=new MutationObserver(()=>{if(modal.classList.contains('hidden') && !window.FMVExperience)setCustomerNavigation('home');});observer.observe(modal,{attributes:true,attributeFilter:['class']});
   }
   const retry=document.getElementById('customer-checkout');if(retry)retry.disabled=!cart.length;
 });
