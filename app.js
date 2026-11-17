@@ -1123,7 +1123,7 @@ function customerProductIllustration(product){
 }
 function customerProductVisual(product){
   let image='';
-  try{if(typeof product.image_url==='string' && product.image_url.trim()){const url=new URL(product.image_url,location.origin);if((url.protocol==='https:' || url.origin===location.origin) && !url.username && !url.password)image=url.href;}}catch(error){}
+  try{if(typeof product.image_url==='string' && product.image_url.trim()){const url=new URL(product.image_url,product.image_url.startsWith('/media/products/')?FMV.apiBase+'/':location.origin);if((url.protocol==='https:' || url.origin===location.origin) && !url.username && !url.password)image=url.href;}}catch(error){}
   return customerProductIllustration(product)+(image?`<img class="customer-product-image" src="${FMV.escape(image)}" alt="${FMV.escape(product.name)}" loading="lazy" referrerpolicy="no-referrer">`:'');
 }
 function customerPaymentLabel(value){const labels={cod_due:'Cash on delivery',pending:'Payment pending',unpaid:'Payment pending',paid:'Paid'};return labels[String(value).toLowerCase()] || String(value || '');}
@@ -1137,8 +1137,8 @@ function checkUserSession(){
   closeAuthModal();
 }
 function handleSignOut(){cart=[];fmvOrders=[];return FMV.logout();}
-async function loadProducts(){if(!FMV.user)return;return FMV.guard(async()=>{
-  try{productsCatalog=await FMV.request('/products');renderProducts();}
+async function loadProducts(supplied){if(!FMV.user)return;return FMV.guard(async()=>{
+  try{productsCatalog=Array.isArray(supplied)?supplied:await FMV.request('/products');renderProducts();}
   catch(error){FMV.setHTML('product-grid',customerEmpty('The catalog could not be loaded','Please check your connection and try again.')+'<button class="fmv-btn customer-catalog-retry" onclick="loadProducts()">Try loading again</button>');throw error;}
 });}
 function renderProducts(){
@@ -1176,19 +1176,22 @@ async function checkoutCart(){
     const body={items:cart.map(i=>({product_id:i.id,quantity:i.quantity})),address_id:window.FMVExperience?.selectedAddress || '',delivery_address:FMV.user.address,currency:'INR',payment_method:FMV.val('fmv-payment-method') || 'COD'};
     const result=await FMV.request('/orders/checkout',{method:'POST',headers:{'Idempotency-Key':fmvCheckoutKey},body});
     cart=[];fmvCheckoutKey=null;saveFmvCart(false);updateCartBadge();closeCartDrawer();
+    await loadDashboardStatus({orders:[...fmvOrders.filter(o=>o.id!==result.order.id),result.order],subscriptions:fmvSubscriptions});
     FMV.notice('Order '+result.order.order_number+' placed. Delivery PIN: '+result.order.delivery_otp+'.');
-    await refreshCustomer();
+    window.FMVExperience?.navigate('profile','orders');
+    refreshCustomer();
     if(result.order.payment_method==='Online')await FMV.pay(result.order.id);
   });
   fmvCheckoutBusy=false;if(checkoutButton){checkoutButton.disabled=!cart.length;checkoutButton.textContent='Continue to checkout →';}
 }
-async function loadDashboardStatus(){if(!FMV.user)return;return FMV.guard(async()=>{
-  const [orders,subs]=await Promise.all([FMV.request('/orders'),FMV.request('/subscriptions')]);fmvOrders=orders;const e=FMV.escape;
+let fmvSubscriptions=[];
+async function loadDashboardStatus(supplied){if(!FMV.user)return;return FMV.guard(async()=>{
+  const [orders,subs]=supplied?[supplied.orders,supplied.subscriptions]:await Promise.all([FMV.request('/orders'),FMV.request('/subscriptions')]);fmvOrders=orders;fmvSubscriptions=subs;const e=FMV.escape;
   FMV.setHTML('dashboard-orders-list',orders.slice().reverse().map(o=>`<div class="customer-order-card"><div class="customer-order-top"><strong>${e(o.order_number)}</strong><span class="customer-status ${customerStatusTone(o.status)}">${e(o.status)}</span></div><p class="customer-order-lines">${e(o.items_summary)}</p><div class="customer-order-info"><div><p>${e(o.delivery_date)}</p><p>${e(o.delivery_address)}</p><p>Payment: ${e(customerPaymentLabel(o.payment_status))}</p></div><strong class="customer-order-total">${FMV.money(o.total_amount)}</strong></div><div class="customer-pin"><span>Delivery PIN</span><strong>${e(o.delivery_otp)}</strong><span>Share only at delivery.</span></div><div class="fmv-flex">${o.status==='Awaiting Payment'?`<button class="fmv-btn" onclick="resumePayment('${e(o.id)}')">Complete payment</button>`:''}${['Awaiting Payment','Unassigned'].includes(o.status) && o.payment_status!=='paid'?`<button class="fmv-btn secondary" onclick="cancelCustomerOrder('${e(o.id)}')">Cancel order</button>`:''}<button class="fmv-btn secondary" onclick="oneClickReorder('${e(o.id)}')">Order again ${customerArrowIcon()}</button></div></div>`).join('') || customerEmpty('No orders just yet','Your confirmed orders and delivery updates will appear here.'));
   FMV.setHTML('dashboard-subscriptions-list',subs.map(s=>`<div class="customer-subscription-card"><div class="customer-order-top"><strong>${e(s.product_name)}</strong><span class="customer-status ${customerStatusTone(s.status)}">${e(s.status)}</span></div><p class="customer-order-lines">${s.quantity} per delivery · ${e(s.frequency)}<br>Starts ${e(s.start_date)}</p><div class="fmv-flex"><button class="fmv-btn secondary" onclick="updateCustomerSubscription('${e(s.id)}','${s.status==='active'?'paused':'active'}')">${s.status==='active'?'Pause deliveries':'Resume deliveries'}</button><button class="fmv-btn danger" onclick="updateCustomerSubscription('${e(s.id)}','cancelled')">Cancel</button></div></div>`).join('') || customerEmpty('Your routine starts here','Choose a product subscription for recurring deliveries that fit your day.'));
 });}
 function resumePayment(id){return FMV.guard(()=>FMV.pay(id));}
-function cancelCustomerOrder(id){return FMV.guard(async()=>{await FMV.request('/orders/'+encodeURIComponent(id)+'/cancel',{method:'POST'});FMV.notice('Order cancelled and stock returned.');refreshCustomer();});}
+function cancelCustomerOrder(id){return FMV.guard(async()=>{const result=await FMV.request('/orders/'+encodeURIComponent(id)+'/cancel',{method:'POST'});await loadDashboardStatus({orders:fmvOrders.map(o=>o.id===id?result.order:o),subscriptions:fmvSubscriptions});FMV.notice('Order cancelled. Cancellation email queued.');refreshCustomer();});}
 function subscribeProduct(id){return FMV.guard(async()=>{
   const quantity=Number(prompt('Quantity per delivery:','1'));if(!quantity)return;
   const frequency=prompt('Frequency: Daily, Weekly or Alternate Days','Daily');if(!frequency)return;
@@ -1210,9 +1213,9 @@ async function handleEnterpriseSSO(provider){return FMV.guard(async()=>{await FM
 function triggerPasswordResetFlow(){FMV.showAuth('signin');document.getElementById('fmv-password-reset')?.click();}
 function togglePortal2FA(){FMV.notice('Email verification remains required for every sign-in.');}
 function initEnterprisePortal(){if(FMV.user)hydrateEnterprisePortalFromBackend();}
-async function hydrateEnterprisePortalFromBackend(){if(!FMV.user)return;return FMV.guard(async()=>{
+async function hydrateEnterprisePortalFromBackend(supplied){if(!FMV.user)return;return FMV.guard(async()=>{
   const paths=['team','tickets','knowledge-base','forum','quotes','rma','billing/invoices','documents','notifications','enterprise/system-status'];
-  const results=await Promise.all(paths.map(path=>FMV.request('/portal/'+path)));
+  const results=supplied || await Promise.all(paths.map(path=>FMV.request('/portal/'+path)));
   portalState.teamMembers=results[0].team_members;portalState.tickets=results[1].tickets;portalState.kbArticles=results[2].articles;portalState.forumPosts=results[3].posts;portalState.quotes=results[4].quotes;portalState.rmaClaims=results[5].claims;portalState.invoices=results[6].invoices;portalState.creditAccount=results[6].credit_account;portalState.documents=results[7].documents;portalState.notifications=results[8].notifications;portalState.erpConnectors=results[9].erp_crm_integrations;portalState.auditLogs=results[9].security_audit_logs;portalState.analytics=results[9].portal_analytics;
   for(const render of [renderB2BTeamList,renderPortalTickets,filterKnowledgeBase,renderCommunityForum,renderQuotesList,renderRMAClaimsList,renderInvoicesRepository,renderCreditAccountSummary,renderSharedDocuments,renderNotificationsFeed,renderERPConnectors,renderAnalyticsAndAuditLogs])render();
 });}
@@ -1258,10 +1261,13 @@ function renderERPConnectors(){FMV.setHTML('erp-connectors-list',portalState.erp
 function triggerERPSync(key){return FMV.guard(async()=>{await FMV.request('/portal/enterprise/erp-sync',{method:'POST',body:{connector:key,sync_entities:['inventory','pricing','ledger','invoices']}});hydrateEnterprisePortalFromBackend();});}
 function applyWhiteLabelBranding(){return FMV.guard(async()=>{const result=await FMV.request('/portal/enterprise/white-label',{method:'PATCH',body:{custom_domain:FMV.val('wl-domain'),company_logo_url:'',primary_color:FMV.val('wl-primary-color'),secondary_color:'#134e4a',font_family:FMV.val('wl-font')}});FMV.notice(result.message);document.body.style.fontFamily=result.white_label.font_family;});}
 function renderAnalyticsAndAuditLogs(){FMV.setHTML('portal-analytics-kpis',`<div class="fmv-row"><span>Orders: ${Number(portalState.analytics?.orders || 0)}</span><span>Tickets: ${Number(portalState.analytics?.tickets || 0)}</span></div>`);FMV.setHTML('security-audit-logs-list',portalState.auditLogs.slice().reverse().map(l=>`<div class="fmv-row"><strong class="fmv-small">${FMV.escape(l.event)}</strong><span class="fmv-small">${FMV.escape(l.timestamp)}</span></div>`).join('') || FMV.empty('No account activity.'));}
-async function refreshCustomer(){if(!FMV.user)return;await Promise.all([loadProducts(),loadDashboardStatus(),hydrateEnterprisePortalFromBackend()]);checkUserSession();}
+async function refreshCustomer(){if(!FMV.user)return;return FMV.refresh('customer',()=>FMV.guard(async()=>{
+  const snapshot=await FMV.snapshot();
+  await Promise.all([loadProducts(snapshot.products),loadDashboardStatus(snapshot),hydrateEnterprisePortalFromBackend(snapshot.enterprise)]);checkUserSession();
+}));}
 document.addEventListener('fmv:authenticated',async()=>{
-  await loadProducts();try{const stored=JSON.parse(sessionStorage.getItem('fmv_cart_'+FMV.user.id) || '{}');cart=(stored.items || []).map(line=>({...productsCatalog.find(p=>p.id===line.id),quantity:line.quantity})).filter(i=>i.id);fmvCheckoutKey=stored.checkoutKey || null;}catch(e){cart=[];}
-  updateCartBadge();refreshCustomer();
+  await refreshCustomer();if(!FMV.user)return;try{const stored=JSON.parse(sessionStorage.getItem('fmv_cart_'+FMV.user.id) || '{}');cart=(stored.items || []).map(line=>({...productsCatalog.find(p=>p.id===line.id),quantity:line.quantity})).filter(i=>i.id);fmvCheckoutKey=stored.checkoutKey || null;}catch(e){cart=[];}
+  updateCartBadge();
 });
 document.addEventListener('fmv:sync',refreshCustomer);
 document.addEventListener('DOMContentLoaded',()=>{

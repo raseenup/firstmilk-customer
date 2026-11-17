@@ -46,9 +46,9 @@
     if(loc)loc.textContent=selected?selected.label+' · '+selected.address:user.address || 'Choose your delivery address';
   }
 
-  async function refreshAddresses(){
+  async function refreshAddresses(supplied){
     if(!FMV.user)return;
-    const result=await FMV.request('/users/me/addresses');
+    const result=supplied || await FMV.request('/users/me/addresses');
     state.addresses=result.addresses;if(result.user)Object.assign(FMV.user,result.user);
     if(!state.addresses.some(a=>a.id===state.selectedAddress))state.selectedAddress=state.addresses.find(a=>a.is_default)?.id || state.addresses[0]?.id || '';
     renderAddresses();renderAddressSelect();renderIdentity();
@@ -103,9 +103,9 @@
     return `<article class="fmv-campaign" data-animation="${motion.matches?'none':e(item.animation)}" data-campaign-id="${e(item.id)}">${media}<div class="fmv-campaign-copy"><span class="customer-eyebrow">${e(item.kind==='menu'?'Fresh picks':item.kind==='offer'?'FMV offers':'First Milk Venture')}</span><h3>${e(item.title)}</h3><p>${e(item.description)}</p>${item.terms?`<small>${e(item.terms)}</small>`:''}<button type="button" class="fmv-btn" data-fmv-action="campaign-link" data-target="${e(item.cta_path)}">${e(item.cta_label || 'Explore')} <span aria-hidden="true">↗</span></button></div></article>`;
   }
 
-  async function refreshCampaigns(){
+  async function refreshCampaigns(supplied){
     if(!FMV.user)return;
-    const result=await FMV.request('/content');if(JSON.stringify(result.campaigns)===JSON.stringify(state.campaigns) && $('fmv-offers-grid').childElementCount)return;state.campaigns=result.campaigns;
+    const result=supplied || await FMV.request('/content');if(JSON.stringify(result.campaigns)===JSON.stringify(state.campaigns) && $('fmv-offers-grid').childElementCount)return;state.campaigns=result.campaigns;
     const banners=state.campaigns.filter(c=>c.placement==='home' && c.kind==='banner');
     const home=state.campaigns.filter(c=>c.placement==='home' && c.kind!=='banner');
     $('fmv-banner-slot').hidden=!banners.length;
@@ -190,8 +190,9 @@
   document.addEventListener('fmv:sync',()=>FMV.guard(async()=>{
     if(!FMV.user)return;
     // Do not overwrite an address form or reset a banner during active input.
-    if(!document.activeElement?.closest('#fmv-address-form'))await refreshAddresses();
-    await refreshCampaigns();
+    const snapshot=await FMV.snapshot();
+    if(!document.activeElement?.closest('#fmv-address-form'))await refreshAddresses({addresses:snapshot.addresses,user:snapshot.user});
+    await refreshCampaigns(snapshot.content);
   }));
   document.addEventListener('fmv:locked',()=>{
     state.addresses=[];state.selectedAddress='';state.campaigns=[];state.area='home';
