@@ -1,0 +1,40 @@
+/* v9 customer areas, campaign carousel and profile menu. */
+[hidden]{display:none!important}
+body[data-portal="customer"] #auth-header-container,body[data-portal="customer"] #fmv-session-bar{display:none!important}
+.fmv-profile-area{max-width:920px;margin-inline:auto;background:#fff;border:1px solid #dde7e0;border-radius:24px;overflow:hidden}
+.fmv-profile-identity{display:flex;gap:22px;align-items:center;padding:32px;background:#eaf0eb}
+#fmv-profile-avatar{display:grid;place-items:center;flex:none;width:84px;height:84px;background:#123e39;border:5px solid #fff;color:#d6edce;border-radius:26px;font-size:28px;font-weight:800}
+.fmv-profile-identity>div{min-width:0}.fmv-profile-identity h2{font-size:28px;font-weight:800;line-height:1.2;margin:0 0 10px;letter-spacing:-.6px}
+.fmv-profile-identity p{margin:3px 0;color:#536964;overflow-wrap:anywhere}
+.fmv-profile-heading{display:flex;align-items:center;gap:16px;padding:22px 28px;border-bottom:1px solid #e2e9e3}
+.fmv-profile-heading h3{font-size:20px;font-weight:750}
+.fmv-profile-group{border-bottom:10px solid #f0f3ef}
+.fmv-profile-group summary{padding:24px 28px;font-size:20px;font-weight:800;cursor:pointer}
+.fmv-profile-row{display:flex;align-items:center;gap:17px;width:100%;text-align:left;padding:20px 28px;border-top:1px solid #e3e9e4;color:#3c504b;font-size:18px;background:#fff;transition:background .2s,transform .2s}
+.fmv-profile-row:hover{background:#f3f8f1}.fmv-profile-row:active{transform:translateX(3px)}
+.fmv-profile-row>span:last-child{margin-left:auto;color:#7b8f86}.fmv-row-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:#eaf5ec;color:#087f63;font-size:24px;flex-shrink:0}
+.fmv-profile-logout{display:flex;justify-content:space-between;color:#bb5345;background:#fff;text-align:left;font-size:19px;font-weight:700;padding:26px 28px;width:100%}
+.fmv-profile-version{text-align:center;color:#76877d;font-size:12px;padding:12px 24px 30px;margin:0}
+.fmv-profile-area>[data-profile-area]:not([data-profile-area="menu"]){padding:28px}
+.fmv-profile-area>.customer-deliveries,.fmv-profile-area>.customer-account-workspace{margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.customer-order-top strong{overflow-wrap:anywhere;min-width:0}.customer-order-top{align-items:flex-start}.customer-status{flex-shrink:0;max-width:45%;white-space:normal!important;text-align:center}
+.fmv-address-list{display:grid;gap:16px;margin-top:24px}.fmv-address-card{padding:22px;border:1px solid #dce7df;border-radius:17px;background:#fbfcf9}
+.fmv-address-card h4{font-size:18px;font-weight:800;margin:0}.fmv-address-card p{white-space:pre-wrap;color:#61766a;margin:12px 0}.fmv-default-tag{font-size:11px;border-radius:20px;padding:3px 9px;color:#087f63;background:#e4f1e6;font-weight:800}
+.fmv-address-form{display:grid;gap:14px;margin:20px 0;padding:24px;border:1px solid #c5dbc9;border-radius:17px;background:#f1f6ef}
+.fmv-address-form h4{font-size:19px;font-weight:750}.fmv-address-form label{display:grid;gap:7px;color:#465c50;font-size:14px;font-weight:600}
+.fmv-address-form input,.fmv-address-form textarea{border:1px solid #cadbcd;background:white;padding:12px;width:100%;font-size:16px}.fmv-address-form .fmv-checkbox{display:flex;align-items:center}.fmv-checkbox input{width:20px;min-height:20px!important}
+.fmv-checkout-address-box{padding:17px;margin:16px 0;border:1px solid #d5e3d8;border-radius:15px;background:#f3f8f1;display:grid;gap:10px}.fmv-checkout-address-box label{font-weight:750;font-size:14px}.fmv-checkout-address-box select{width:100%;border:1px solid #c5d7ca;padding:10px;background:#fff}
+.fmv-wallet-area{background:linear-gradient(135deg,#f4f8ee,#e9f2e9)}.fmv-wallet-area h3{font-size:30px;font-weight:800;letter-spacing:-.7px}.fmv-wallet-area p{max-width:580px;color:#5b7064;margin:16px 0}
+.fmv-policy-copy{white-space:pre-wrap;font-size:16px;line-height:1.9;padding:25px 0;color:#4a6356}
+.fmv-campaign-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:24px}
+.fmv-campaign{position:relative;min-width:0;border:1px solid #dce7dc;border-radius:22px;overflow:hidden;background:#fff;box-shadow:0 12px 28px #163b2810;animation:fmv-fade .55s ease both}
+.fmv-campaign[data-animation="none"]{animation:none}.fmv-campaign[data-animation="slide"]{animation:fmv-slide .6s ease both}
+.fmv-campaign img,.fmv-campaign video{width:100%;display:block;aspect-ratio:16/8;object-fit:cover;background:#e3ede5}.fmv-campaign-copy{padding:24px}
+.fmv-campaign h3{font-size:26px;line-height:1.2;letter-spacing:-.5px;font-weight:800;margin:8px 0 12px}.fmv-campaign p{white-space:pre-wrap;color:#61766a;margin:0 0 18px;font-size:15px;line-height:1.7}.fmv-campaign small{display:block;white-space:pre-wrap;color:#728373;margin-bottom:16px}
+.fmv-banner-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:24px;scrollbar-width:none;overscroll-behavior-x:contain}.fmv-banner-track::-webkit-scrollbar{display:none}.fmv-banner-track>.fmv-campaign{flex:0 0 100%;scroll-snap-align:center;box-shadow:none;border-radius:24px;display:grid;grid-template-columns:1.25fr 1fr;background:#eef5e9}.fmv-banner-track img,.fmv-banner-track video{height:100%;min-height:270px;aspect-ratio:16/10}.fmv-banner-track .fmv-campaign-copy{align-self:center;padding:36px}.fmv-banner-track .fmv-campaign:has(:not(img):first-child){min-height:220px}
+.fmv-banner-controls{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:14px}.fmv-banner-controls button{border:1px solid #cbdccf;border-radius:30px;padding:8px 16px;color:#3d6050;font-size:13px;background:#fff}
+.fmv-play-media{min-height:180px;background:#e4f0e2;width:100%;font-weight:700;padding:24px;color:#184b3c}
+#fmv-offers-area> .customer-section-heading h2{font-size:34px;font-weight:800;letter-spacing:-1px}
+@keyframes fmv-fade{from{opacity:0}to{opacity:1}}@keyframes fmv-slide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:760px){.customer-header-inner{height:auto!important;min-height:86px;flex-wrap:nowrap!important;padding:18px 16px!important;gap:12px!important}.customer-brand{min-width:0;gap:9px}.customer-brand-mark{width:39px;height:39px;border-radius:13px}.customer-brand-copy h1{font-size:23px!important}.customer-brand-copy p{font-size:7px!important;letter-spacing:1px}.customer-header-actions{flex:none!important;justify-content:flex-end!important;width:auto!important}.customer-header-actions>button{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important}.customer-header-actions .customer-header-search span{display:none}.customer-header-actions select{display:none!important}.customer-workspace{padding-top:16px!important}.fmv-profile-identity{gap:15px;padding:24px 20px}#fmv-profile-avatar{width:64px;height:64px;font-size:23px;border-radius:21px}.fmv-profile-identity h2{font-size:24px}.fmv-profile-identity p{font-size:14px}.fmv-profile-heading,.fmv-profile-group summary{padding:20px}.fmv-profile-row{padding:19px 20px;font-size:16px}.fmv-profile-area>[data-profile-area]:not([data-profile-area="menu"]){padding:20px}.fmv-campaign-grid{grid-template-columns:1fr;gap:18px}.fmv-banner-track>.fmv-campaign{display:block}.fmv-banner-track img,.fmv-banner-track video{min-height:0;max-height:240px;height:auto;aspect-ratio:16/9}.fmv-banner-track .fmv-campaign-copy{padding:22px}.fmv-campaign h3{font-size:25px}.fmv-profile-area .customer-delivery-grid{grid-template-columns:1fr!important}.fmv-address-form{padding:18px}}
+@media(prefers-reduced-motion:reduce){.fmv-campaign,.fmv-profile-row{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
