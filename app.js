@@ -101,6 +101,7 @@ function updateCartBadge() {
 }
 
 function openCartDrawer() {
+  setCustomerNavigation("cart");
   document.getElementById("cart-drawer").classList.remove("hidden");
   renderCartItems();
 }
@@ -447,6 +448,7 @@ async function loadDashboardStatus() {
 }
 
 function openSearchModal() {
+  setCustomerNavigation("search");
   document.getElementById("search-modal").classList.remove("hidden");
   document.getElementById("search-input").focus();
 }
@@ -626,11 +628,12 @@ function openPortalHub(tabKey) {
   document.querySelectorAll(".portal-view").forEach(el => el.classList.add("hidden"));
   document.querySelectorAll(".portal-tab-btn").forEach(btn => {
     btn.className = "portal-tab-btn px-3 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200";
+    btn.setAttribute("aria-selected", "false");
   });
   const targetView = document.getElementById(`pview-${tabKey}`);
   const targetBtn = document.getElementById(`ptab-${tabKey}`);
   if (targetView) targetView.classList.remove("hidden");
-  if (targetBtn) targetBtn.className = "portal-tab-btn px-3 py-2 rounded-xl bg-emerald-600 text-white shadow-sm";
+  if (targetBtn) { targetBtn.className = "portal-tab-btn px-3 py-2 rounded-xl bg-emerald-600 text-white shadow-sm"; targetBtn.setAttribute("aria-selected", "true"); }
   document.getElementById("enterprise-portal-suite")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
@@ -1104,17 +1107,43 @@ function closeAuthModal(){document.getElementById('auth-modal')?.classList.add('
 function handleCustomerSignIn(){openAuthModal('signin');}
 function handleCustomerSignUp(){openAuthModal('signup');}
 function sendCustomerAuthOTP(mode){openAuthModal(mode);}
+function customerInitials(value){return String(value || '').trim().split(/\s+/).slice(0,2).map(word=>Array.from(word)[0] || '').join('').toUpperCase() || 'FM';}
+function customerArrowIcon(){return '<svg class="customer-inline-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
+function customerProductIllustration(product){
+  const name=String(product.name || '').toLowerCase();
+  const category=/ghee|honey|cream cheese/.test(name)?'jar':/curd|yogurt|yoghurt/.test(name)?'bowl':/butter|paneer|cheese/.test(name)?'butter':/milk/.test(name) && !/powder/.test(name)?'milk':'bag';
+  const drawings={
+    milk:'<ellipse cx="80" cy="125" rx="38" ry="7" fill="currentColor" opacity=".12"/><path d="M63 31h34l13 26v54c0 8-6 14-14 14H64c-8 0-14-6-14-14V57l13-26Z" fill="#fffef7" stroke="currentColor" stroke-width="2.5"/><path d="M62 19h36v14H62z" fill="currentColor"/><path d="M51 65h58v34H51z" fill="currentColor" opacity=".8"/><path d="M80 72c-7 8-11 13-11 18a11 11 0 0 0 22 0c0-5-4-10-11-18Z" fill="#e1eedb"/><path d="M60 45h13" stroke="#fff" stroke-width="4" stroke-linecap="round"/>',
+    jar:'<ellipse cx="80" cy="125" rx="43" ry="7" fill="currentColor" opacity=".12"/><rect x="43" y="35" width="74" height="87" rx="17" fill="#f3cc77" stroke="currentColor" stroke-width="2.5"/><rect x="41" y="24" width="78" height="19" rx="6" fill="currentColor"/><path d="M52 29h56" stroke="#fff" stroke-width="2" opacity=".35"/><rect x="43" y="59" width="74" height="40" fill="#fff9e7"/><path d="M80 88c0-13 7-20 17-23-1 12-7 20-17 23Zm0 0c-9-1-14-7-15-15 9 0 14 5 15 15Z" fill="currentColor"/><path d="M53 49v58" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".55"/>',
+    bowl:'<ellipse cx="80" cy="122" rx="48" ry="7" fill="currentColor" opacity=".12"/><path d="M29 61h102c-3 35-20 58-51 58S32 96 29 61Z" fill="#fffef7" stroke="currentColor" stroke-width="2.5"/><ellipse cx="80" cy="61" rx="51" ry="16" fill="#f3e4bf" stroke="currentColor" stroke-width="2.5"/><ellipse cx="80" cy="60" rx="43" ry="10" fill="#fffef7"/><path d="M103 46c-5-10-10-15-9-24 10 1 15 8 15 17" fill="currentColor"/><path d="M93 29c-8-6-14-6-20-4 2 8 8 13 20 13" fill="#a7bf81"/><path d="M38 80c10 10 24 15 42 15s33-5 43-15" stroke="currentColor" stroke-width="8" opacity=".72"/>',
+    butter:'<ellipse cx="80" cy="124" rx="57" ry="9" fill="currentColor" opacity=".12"/><path d="m30 94 48-21 53 23-46 25-55-27Z" fill="#fffef7" stroke="currentColor" stroke-width="2"/><path d="m42 86 42-20 32 13v23l-42 18-32-14V86Z" fill="#e7c46d" stroke="currentColor" stroke-width="2.5"/><path d="m42 86 32 13 42-20M74 99v21" stroke="currentColor" stroke-width="2"/><path d="m40 62 44-20 35 14-43 21-36-15Z" fill="#fff1b8" stroke="currentColor" stroke-width="2.5"/><path d="M40 62v24l36 14V77l-36-15Z" fill="#edcc7b" stroke="currentColor" stroke-width="2.5"/><path d="m76 77 43-21v24L76 100V77Z" fill="#d6b55d" stroke="currentColor" stroke-width="2.5"/>',
+    bag:'<ellipse cx="80" cy="125" rx="43" ry="7" fill="currentColor" opacity=".12"/><path d="M47 49h66l9 73H38l9-73Z" fill="#fff6df" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M63 51V37a17 17 0 0 1 34 0v14" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M80 99c0-17 8-26 22-29-1 15-9 25-22 29Zm0 0c-13-1-20-9-21-20 12 0 19 7 21 20Z" fill="currentColor"/><path d="M48 112h64" stroke="currentColor" stroke-width="2" opacity=".15"/>'
+  };
+  return `<svg class="customer-product-illustration" data-product-illustration="${category}" viewBox="0 0 160 145" fill="none" aria-hidden="true">${drawings[category]}</svg>`;
+}
+function customerProductVisual(product){
+  let image='';
+  try{if(typeof product.image_url==='string' && product.image_url.trim()){const url=new URL(product.image_url,location.origin);if((url.protocol==='https:' || url.origin===location.origin) && !url.username && !url.password)image=url.href;}}catch(error){}
+  return customerProductIllustration(product)+(image?`<img class="customer-product-image" src="${FMV.escape(image)}" alt="${FMV.escape(product.name)}" loading="lazy" referrerpolicy="no-referrer">`:'');
+}
+function customerPaymentLabel(value){const labels={cod_due:'Cash on delivery',pending:'Payment pending',unpaid:'Payment pending',paid:'Paid'};return labels[String(value).toLowerCase()] || String(value || '');}
+function customerStatusTone(value){return /^(delivered|paid|active|approved|resolved|completed)$/i.test(String(value))?'success':/cancel|fail|reject|overdue/i.test(String(value))?'danger':'';}
+function customerEmpty(title,description){return `<div class="customer-empty"><span aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h16v13H4zM3 4h18v4H3zM9 12h6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><h4>${FMV.escape(title)}</h4><p>${FMV.escape(description)}</p></div>`;}
+function setCustomerNavigation(tab){for(const button of document.querySelectorAll('.customer-bottom-nav [data-customer-tab]')){if(button.dataset.customerTab===tab)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}}
 function checkUserSession(){
   const u=FMV.user;if(!u)return;
-  FMV.setHTML('auth-header-container',`<button class="fmv-btn secondary" onclick="openEditProfileModal()">${FMV.escape(u.full_name)}</button><button class="fmv-btn secondary" onclick="handleSignOut()">Sign out</button>`);
-  const loc=document.getElementById('user-location-label');if(loc)loc.textContent=u.address || 'Kerala, India';
+  FMV.setHTML('auth-header-container',`<button class="fmv-btn secondary customer-account-button" aria-label="Open account details" onclick="openEditProfileModal()"><span class="customer-account-avatar" aria-hidden="true">${FMV.escape(customerInitials(u.full_name))}</span><span class="customer-account-name">${FMV.escape(u.full_name || 'Your account')}</span></button><button class="fmv-btn secondary customer-signout" aria-label="Sign out" onclick="handleSignOut()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h11" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sign out</span></button>`);
+  const loc=document.getElementById('user-location-label');if(loc)loc.textContent=u.address || 'Add your delivery address';
   closeAuthModal();
 }
 function handleSignOut(){cart=[];fmvOrders=[];return FMV.logout();}
-async function loadProducts(){if(!FMV.user)return;return FMV.guard(async()=>{productsCatalog=await FMV.request('/products');renderProducts();});}
+async function loadProducts(){if(!FMV.user)return;return FMV.guard(async()=>{
+  try{productsCatalog=await FMV.request('/products');renderProducts();}
+  catch(error){FMV.setHTML('product-grid',customerEmpty('The catalog could not be loaded','Please check your connection and try again.')+'<button class="fmv-btn customer-catalog-retry" onclick="loadProducts()">Try loading again</button>');throw error;}
+});}
 function renderProducts(){
   const e=FMV.escape;
-  FMV.setHTML('product-grid',productsCatalog.map(p=>`<article class="bg-white rounded-3xl p-5 border border-gray-200 shadow-sm"><div class="fmv-row"><strong>${e(p.name)}</strong><span class="fmv-small">${e(p.unit)}</span></div><p class="fmv-small">${e(p.description)}</p><p class="fmv-small">${p.stock_quantity>0?p.stock_quantity+' units available':'Out of stock'}</p><div class="fmv-row"><strong>${FMV.money(p.price)}</strong><span class="fmv-small">${p.tax_rate?' + '+Number(p.tax_rate)+'% GST':''}</span></div><div class="fmv-flex"><button class="fmv-btn secondary" onclick="adjustQty('${e(p.id)}',-1)">−</button><span id="qty-${e(p.id)}">1</span><button class="fmv-btn secondary" onclick="adjustQty('${e(p.id)}',1)">+</button><button class="fmv-btn" ${p.stock_quantity<=0?'disabled':''} onclick="addToCart('${e(p.id)}')">Add to cart</button><button class="fmv-btn secondary" onclick="subscribeProduct('${e(p.id)}')">Subscribe</button></div></article>`).join('') || FMV.empty('No products are currently available.'));
+  FMV.setHTML('product-grid',productsCatalog.map((p,index)=>`<article class="customer-product-card" data-tone="${index%3}"><div class="customer-product-visual" aria-hidden="true">${customerProductVisual(p)}<span class="customer-unit">${e(p.unit)}</span><span class="customer-product-stock ${p.stock_quantity>0?'':'is-out'}">${p.stock_quantity>0?'In stock':'Out of stock'}</span></div><h4>${e(p.name)}</h4><p class="customer-product-description">${e(p.description)}</p><div class="customer-product-price"><strong>${FMV.money(p.price)}</strong><span>per ${e(p.unit)}${p.tax_rate?'<br>+ '+Number(p.tax_rate)+'% GST':''}</span></div><div class="customer-product-actions"><div class="customer-quantity" aria-label="Quantity for ${e(p.name)}"><button aria-label="Decrease ${e(p.name)} quantity" onclick="adjustQty('${e(p.id)}',-1)">−</button><span id="qty-${e(p.id)}" aria-live="polite">1</span><button aria-label="Increase ${e(p.name)} quantity" onclick="adjustQty('${e(p.id)}',1)">+</button></div><button class="customer-add-button" ${p.stock_quantity<=0?'disabled':''} onclick="addToCart('${e(p.id)}')">Add to cart <span aria-hidden="true">+</span></button></div><button class="customer-subscribe-button" onclick="subscribeProduct('${e(p.id)}')">Make it a subscription ${customerArrowIcon()}</button></article>`).join('') || customerEmpty('A fresh selection is on its way','No products are currently available. Please check back later.'));
 }
 function adjustQty(id,delta){const el=document.getElementById('qty-'+id),p=productsCatalog.find(p=>p.id===id);if(el && p)el.textContent=Math.max(1,Math.min(p.stock_quantity || 1,Number(el.textContent)+delta));}
 function saveFmvCart(changed=true){
@@ -1133,13 +1162,14 @@ function renderCartItems(){
   const e=FMV.escape;let subtotal=0,tax=0;
   FMV.setHTML('cart-items-container',cart.map((item,index)=>{
     const p=productsCatalog.find(p=>p.id===item.id) || item;const base=Math.round(Number(p.price)*100)*item.quantity;subtotal+=base;tax+=Math.round(base*Number(p.tax_rate || 0)/100);
-    return `<div class="fmv-panel"><strong>${e(p.name)}</strong><p class="fmv-small">${FMV.money(p.price)} × ${item.quantity}</p><div class="fmv-flex"><button class="fmv-btn secondary" onclick="changeCartQty(${index},-1)">−</button><span>${item.quantity}</span><button class="fmv-btn secondary" onclick="changeCartQty(${index},1)">+</button><button class="fmv-btn danger" onclick="removeFromCart(${index})">Remove</button></div></div>`;
-  }).join('') || FMV.empty('Your cart is empty.'));
+    return `<div class="customer-cart-line"><div class="customer-cart-heading"><span class="customer-cart-monogram" aria-hidden="true">${customerProductIllustration(p)}</span><div><strong>${e(p.name)}</strong><p>${FMV.money(p.price)} per ${e(p.unit)} · ${FMV.money(base/100)}</p></div></div><div class="customer-cart-actions"><div class="customer-quantity"><button aria-label="Decrease ${e(p.name)} quantity" onclick="changeCartQty(${index},-1)">−</button><span aria-label="Quantity">${item.quantity}</span><button aria-label="Increase ${e(p.name)} quantity" onclick="changeCartQty(${index},1)">+</button></div><button class="customer-cart-remove" onclick="removeFromCart(${index})">Remove item</button></div></div>`;
+  }).join('') || customerEmpty('Your basket is waiting','Pick something fresh from the catalog to get started.'));
   const total=document.getElementById('cart-total-price');if(total)total.textContent=FMV.money((subtotal+tax)/100);
+  const checkout=document.getElementById('customer-checkout');if(checkout)checkout.disabled=!cart.length || fmvCheckoutBusy;
 }
 async function checkoutCart(){
   if(fmvCheckoutBusy)return;if(!FMV.user){FMV.showAuth();return;}if(!cart.length){FMV.notice('Your cart is empty.',true);return;}
-  fmvCheckoutBusy=true;
+  fmvCheckoutBusy=true;const checkoutButton=document.getElementById('customer-checkout');if(checkoutButton){checkoutButton.disabled=true;checkoutButton.textContent='Placing your order…';}
   await FMV.guard(async()=>{
     fmvCheckoutKey ||= crypto.randomUUID().replaceAll('-','');saveFmvCart(false);
     const body={items:cart.map(i=>({product_id:i.id,quantity:i.quantity})),delivery_address:FMV.user.address,currency:'INR',payment_method:FMV.val('fmv-payment-method') || 'COD'};
@@ -1149,12 +1179,12 @@ async function checkoutCart(){
     await refreshCustomer();
     if(result.order.payment_method==='Online')await FMV.pay(result.order.id);
   });
-  fmvCheckoutBusy=false;
+  fmvCheckoutBusy=false;if(checkoutButton){checkoutButton.disabled=!cart.length;checkoutButton.textContent='Continue to checkout →';}
 }
 async function loadDashboardStatus(){if(!FMV.user)return;return FMV.guard(async()=>{
   const [orders,subs]=await Promise.all([FMV.request('/orders'),FMV.request('/subscriptions')]);fmvOrders=orders;const e=FMV.escape;
-  FMV.setHTML('dashboard-orders-list',orders.slice().reverse().map(o=>`<div class="fmv-panel"><div class="fmv-row"><strong>${e(o.order_number)}</strong><span>${e(o.status)}</span></div><p class="fmv-small">${e(o.items_summary)}<br>Delivery: ${e(o.delivery_date)} · ${e(o.delivery_address)}<br>${FMV.money(o.total_amount)} · ${e(o.payment_status)}<br>Delivery PIN: <strong>${e(o.delivery_otp)}</strong> · Share only at delivery.</p><div class="fmv-flex">${o.status==='Awaiting Payment'?`<button class="fmv-btn" onclick="resumePayment('${e(o.id)}')">Complete payment</button>`:''}${['Awaiting Payment','Unassigned'].includes(o.status) && o.payment_status!=='paid'?`<button class="fmv-btn secondary" onclick="cancelCustomerOrder('${e(o.id)}')">Cancel</button>`:''}<button class="fmv-btn secondary" onclick="oneClickReorder('${e(o.id)}')">Reorder</button></div></div>`).join('') || FMV.empty('Your confirmed orders will appear here.'));
-  FMV.setHTML('dashboard-subscriptions-list',subs.map(s=>`<div class="fmv-row"><div><strong>${e(s.product_name)}</strong><p class="fmv-small">${s.quantity} · ${e(s.frequency)} · ${e(s.status)} · starts ${e(s.start_date)}</p></div><button class="fmv-btn secondary" onclick="updateCustomerSubscription('${e(s.id)}','${s.status==='active'?'paused':'active'}')">${s.status==='active'?'Pause':'Resume'}</button><button class="fmv-btn danger" onclick="updateCustomerSubscription('${e(s.id)}','cancelled')">Cancel</button></div>`).join('') || FMV.empty('Choose Subscribe on a product to schedule recurring deliveries.'));
+  FMV.setHTML('dashboard-orders-list',orders.slice().reverse().map(o=>`<div class="customer-order-card"><div class="customer-order-top"><strong>${e(o.order_number)}</strong><span class="customer-status ${customerStatusTone(o.status)}">${e(o.status)}</span></div><p class="customer-order-lines">${e(o.items_summary)}</p><div class="customer-order-info"><div><p>${e(o.delivery_date)}</p><p>${e(o.delivery_address)}</p><p>Payment: ${e(customerPaymentLabel(o.payment_status))}</p></div><strong class="customer-order-total">${FMV.money(o.total_amount)}</strong></div><div class="customer-pin"><span>Delivery PIN</span><strong>${e(o.delivery_otp)}</strong><span>Share only at delivery.</span></div><div class="fmv-flex">${o.status==='Awaiting Payment'?`<button class="fmv-btn" onclick="resumePayment('${e(o.id)}')">Complete payment</button>`:''}${['Awaiting Payment','Unassigned'].includes(o.status) && o.payment_status!=='paid'?`<button class="fmv-btn secondary" onclick="cancelCustomerOrder('${e(o.id)}')">Cancel order</button>`:''}<button class="fmv-btn secondary" onclick="oneClickReorder('${e(o.id)}')">Order again ${customerArrowIcon()}</button></div></div>`).join('') || customerEmpty('No orders just yet','Your confirmed orders and delivery updates will appear here.'));
+  FMV.setHTML('dashboard-subscriptions-list',subs.map(s=>`<div class="customer-subscription-card"><div class="customer-order-top"><strong>${e(s.product_name)}</strong><span class="customer-status ${customerStatusTone(s.status)}">${e(s.status)}</span></div><p class="customer-order-lines">${s.quantity} per delivery · ${e(s.frequency)}<br>Starts ${e(s.start_date)}</p><div class="fmv-flex"><button class="fmv-btn secondary" onclick="updateCustomerSubscription('${e(s.id)}','${s.status==='active'?'paused':'active'}')">${s.status==='active'?'Pause deliveries':'Resume deliveries'}</button><button class="fmv-btn danger" onclick="updateCustomerSubscription('${e(s.id)}','cancelled')">Cancel</button></div></div>`).join('') || customerEmpty('Your routine starts here','Choose a product subscription for recurring deliveries that fit your day.'));
 });}
 function resumePayment(id){return FMV.guard(()=>FMV.pay(id));}
 function cancelCustomerOrder(id){return FMV.guard(async()=>{await FMV.request('/orders/'+encodeURIComponent(id)+'/cancel',{method:'POST'});FMV.notice('Order cancelled and stock returned.');refreshCustomer();});}
@@ -1165,14 +1195,14 @@ function subscribeProduct(id){return FMV.guard(async()=>{
   const result=await FMV.request('/subscriptions',{method:'POST',body:{product_id:id,quantity,frequency,start_date:start,zone_id:'Zone-1'}});FMV.notice(result.message);loadDashboardStatus();
 });}
 function updateCustomerSubscription(id,status){return FMV.guard(async()=>{await FMV.request('/subscriptions/'+encodeURIComponent(id),{method:'PATCH',body:{status}});loadDashboardStatus();});}
-function openEditProfileModal(){if(!FMV.user){FMV.showAuth();return;}document.getElementById('edit-fullname').value=FMV.user.full_name;document.getElementById('edit-phone').value=FMV.user.phone;document.getElementById('edit-address').value=FMV.user.address;document.getElementById('profile-modal').classList.remove('hidden');}
+function openEditProfileModal(){if(!FMV.user){FMV.showAuth();return;}setCustomerNavigation('profile');document.getElementById('edit-fullname').value=FMV.user.full_name;document.getElementById('edit-phone').value=FMV.user.phone;document.getElementById('edit-address').value=FMV.user.address;document.getElementById('profile-modal').classList.remove('hidden');}
 async function saveProfileDetails(){return FMV.guard(async()=>{
   await FMV.request('/users/me',{method:'PATCH',body:{full_name:FMV.val('edit-fullname'),phone:FMV.val('edit-phone'),address:FMV.val('edit-address')}});
   await FMV.request('/portal/company-profile',{method:'PATCH',body:{company_name:FMV.val('edit-company-name'),tax_registration_number:FMV.val('edit-tax-id'),billing_address:FMV.val('edit-billing-address'),notification_preferences:{email:!!document.getElementById('pref-notif-email')?.checked,sms:!!document.getElementById('pref-notif-sms')?.checked,inapp:!!document.getElementById('pref-notif-inapp')?.checked},preferred_currency:'INR'}});
   const session=await FMV.request('/auth/session');Object.assign(FMV.user,session.user);closeEditProfileModal();checkUserSession();FMV.notice('Profile saved.');
 });}
 function executeSearch(){const query=FMV.val('search-input').toLowerCase(),e=FMV.escape;FMV.setHTML('search-results-container',productsCatalog.filter(p=>(p.name+' '+p.description).toLowerCase().includes(query)).map(p=>`<div class="fmv-row"><div><strong>${e(p.name)}</strong><p class="fmv-small">${FMV.money(p.price)} · ${p.stock_quantity} available</p></div><button class="fmv-btn" onclick="addToCart('${e(p.id)}')">Add</button></div>`).join('') || FMV.empty('No matching products.'));}
-function switchTab(tab){if(tab==='offers'){FMV.notice('Current prices and availability are shown in the product catalog.');return;}if(tab==='home')document.getElementById('product-grid')?.scrollIntoView({behavior:'smooth'});}
+function switchTab(tab){setCustomerNavigation(tab);if(tab==='offers'){FMV.notice('Current prices and availability are shown in the product catalog.');document.getElementById('product-grid')?.scrollIntoView({behavior:'smooth'});return;}if(tab==='home')document.getElementById('product-grid')?.scrollIntoView({behavior:'smooth'});}
 function formatPortalAmount(amount){return FMV.money(amount);}
 function changePortalCurrency(){portalCurrency='INR';const e=document.getElementById('portal-currency-select');if(e)e.value='INR';FMV.notice('All prices, orders and payments use INR.');}
 async function handleEnterpriseSSO(provider){return FMV.guard(async()=>{await FMV.request('/portal/auth/sso/initiate',{method:'POST',body:{provider,domain:location.hostname}});});}
@@ -1239,3 +1269,17 @@ document.addEventListener('DOMContentLoaded',()=>{
   for(const button of document.querySelectorAll('[onclick]'))if(button.getAttribute('onclick')?.includes('Tracking Link:'))button.setAttribute('onclick','showCustomerTracking()');
   const note=document.getElementById('btn-toggle-2fa');if(note)note.textContent='Email OTP required';
 });
+
+// Customer presentation hooks; underlying API actions and trusted listeners stay intact.
+document.addEventListener('DOMContentLoaded',()=>{
+  for(const button of document.querySelectorAll('.customer-bottom-nav [data-customer-tab]'))button.addEventListener('click',()=>setCustomerNavigation(button.dataset.customerTab));
+  for(const tab of document.querySelectorAll('.portal-tab-btn'))tab.setAttribute('aria-selected',String(tab.id==='ptab-security-rbac'));
+  for(const modal of document.querySelectorAll('#profile-modal,#search-modal,#cart-drawer')){
+    const observer=new MutationObserver(()=>{if(modal.classList.contains('hidden'))setCustomerNavigation('home');});observer.observe(modal,{attributes:true,attributeFilter:['class']});
+  }
+  const retry=document.getElementById('customer-checkout');if(retry)retry.disabled=!cart.length;
+});
+
+// Image fallbacks use listeners, preserving the CSP ban on inline event handlers.
+document.addEventListener('error',event=>{if(event.target instanceof HTMLImageElement && event.target.classList.contains('customer-product-image')){event.target.hidden=true;const art=event.target.parentElement.querySelector('.customer-product-illustration');if(art)art.hidden=false;}},true);
+document.addEventListener('load',event=>{if(event.target instanceof HTMLImageElement && event.target.classList.contains('customer-product-image')){const art=event.target.parentElement.querySelector('.customer-product-illustration');if(art)art.hidden=true;}},true);
