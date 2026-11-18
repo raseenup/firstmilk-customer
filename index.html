@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="fmv-locked">
 <head>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://backend.firstmilkventure.com https://api.razorpay.com; frame-src https://api.razorpay.com https://checkout.razorpay.com; media-src 'self' blob: https://backend.firstmilkventure.com; object-src 'none'; base-uri 'self'; form-action 'self'">
     <meta name="referrer" content="same-origin">
+    <link rel="preconnect" href="https://backend.firstmilkventure.com" crossorigin>
+    <meta name="theme-color" content="#123e3b">
     <link rel="stylesheet" href="portal.css">
-    <script src="config.js"></script>
-    <script src="portal-core.js"></script>
+    <script defer src="config.js"></script>
+    <script defer src="portal-core.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>First Milk Venture - Fresh Daily Dairy Delivery Platform</title>
@@ -16,6 +18,7 @@
     <link rel="stylesheet" href="experience.css">
     <link rel="stylesheet" href="workspace.css">
     <link rel="stylesheet" href="orders.css">
+    <link rel="stylesheet" href="polish.css">
 </head>
 <body data-portal="customer" class="bg-gray-50 font-sans min-h-screen pb-24">
     <!-- Top Header Bar -->
@@ -31,7 +34,7 @@
             
             <!-- Desktop currency and language controls; account tools are in Profile -->
             <div class="customer-header-actions flex items-center space-x-2 sm:space-x-3">
-                <select id="portal-currency-select" onchange="changePortalCurrency(this.value)" title="Multi-Currency Selector" class="hidden md:block bg-gray-100 text-gray-700 text-[11px] font-bold px-2.5 py-2 rounded-xl border border-gray-200 focus:outline-none">
+                <select id="portal-currency-select" hidden aria-hidden="true" tabindex="-1" onchange="changePortalCurrency(this.value)" title="Currency" class="hidden md:block bg-gray-100 text-gray-700 text-[11px] font-bold px-2.5 py-2 rounded-xl border border-gray-200 focus:outline-none">
                     <option value="INR" selected>INR (₹)</option>
                 </select>
                 <select id="portal-lang-select" onchange="changePortalLanguage(this.value)" title="Multilingual Selector" class="hidden md:block bg-gray-100 text-gray-700 text-[11px] font-bold px-2.5 py-2 rounded-xl border border-gray-200 focus:outline-none">
@@ -58,7 +61,7 @@
                 <h2>Good mornings<br>start here<span>.</span></h2>
                 <p>Fresh essentials, delivered your way. Shop once or create a routine that works for you.</p>
                 <div class="customer-hero-actions"><button type="button" onclick="switchTab('home')">Explore the catalog <svg class="customer-inline-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" onclick="showCustomerTracking()">Your deliveries</button></div>
-                <div class="customer-hero-tags"><span>One-time orders</span><span>Flexible subscriptions</span><span>INR checkout</span></div>
+                <div class="customer-hero-tags"><span>One-time orders</span><span>Flexible subscriptions</span><span>Easy checkout</span></div>
             </div>
             <div class="customer-hero-art" aria-hidden="true"><div class="customer-art-orbit"></div><svg viewBox="0 0 320 280" fill="none"><ellipse cx="165" cy="244" rx="106" ry="13" fill="#09272c" opacity=".26"/><path d="M142 61h57l20 43v111c0 13-11 23-24 23h-48c-13 0-24-10-24-23V104l19-43Z" fill="#f4f8f4"/><path d="m142 61 12-23h35l10 23h-57Z" fill="#f9cc70"/><path d="M149 39h42v-9c0-5-4-9-9-9h-24c-5 0-9 4-9 9v9Z" fill="#f2b74b"/><path d="M124 123h94v70h-94z" fill="#087f63"/><path d="M171 139c-9 12-17 20-17 29a17 17 0 1 0 34 0c0-9-8-17-17-29Z" fill="#bfe6cc"/><path d="M171 178c0-12 5-20 13-22-1 10-6 18-13 22Z" fill="#102f32"/><path d="M107 158c-23-1-44 18-44 43 26 1 45-16 44-43Z" fill="#badb9a"/><path d="M83 223c4-20 15-33 30-39" stroke="#badb9a" stroke-width="6" stroke-linecap="round"/><circle cx="251" cy="79" r="23" fill="#f9cc70"/><path d="m241 79 7 7 13-15" stroke="#102f32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="customer-art-caption">FRESH ROUTINES.<br>HAPPIER DAYS.</span></div>
         </section>
@@ -77,6 +80,8 @@
                 <!-- Populated dynamically -->
             </div>
         </section>
+
+        <aside class="fmv-brand-note" aria-label="A little First Milk inspiration"><span class="fmv-note-mark" aria-hidden="true">✦</span><div><span class="fmv-note-eyebrow">A LITTLE GOODNESS, EVERY DAY</span><p>Fresh choices. Brighter mornings.</p></div><span class="fmv-note-caption">Good food. Good days.</span></aside>
 
         <!-- Order Status & Subscription Status Dashboard Content -->
         <section class="customer-deliveries bg-white rounded-3xl border border-gray-200 p-6 shadow-sm space-y-4" aria-label="Your subscriptions and orders">
@@ -244,7 +249,7 @@
                             </div>
                         </div>
                         <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-xs">
-                            <span class="font-bold text-emerald-900 block">Catalog pricing: Current INR prices apply</span>
+                            <span class="font-bold text-emerald-900 block">Catalog pricing: Current prices apply</span>
                             <span class="text-[11px] text-emerald-700">Availability and prices come from the current product catalog.</span>
                         </div>
                     </div>
@@ -571,9 +576,9 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
-    <script src="experience.js"></script>
-    <script src="workspace.js"></script>
-    <script src="orders.js"></script>
+    <script defer src="app.js"></script>
+    <script defer src="experience.js"></script>
+    <script defer src="workspace.js"></script>
+    <script defer src="orders.js"></script>
 </body>
 </html>

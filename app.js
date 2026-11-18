@@ -172,7 +172,7 @@ async function checkoutCart() {
     })),
     total_amount: totalAmount,
     currency: "INR",
-    payment_method: "UPI / Online (INR)"
+    payment_method: "UPI / Online"
   };
 
   try {
@@ -1208,7 +1208,7 @@ async function saveProfileDetails(){return FMV.guard(async()=>{
 function executeSearch(){const query=FMV.val('search-input').toLowerCase(),e=FMV.escape;FMV.setHTML('search-results-container',productsCatalog.filter(p=>(p.name+' '+p.description).toLowerCase().includes(query)).map(p=>`<div class="fmv-row"><div><strong>${e(p.name)}</strong><p class="fmv-small">${FMV.money(p.price)} · ${p.stock_quantity} available</p></div><button class="fmv-btn" onclick="addToCart('${e(p.id)}')">Add</button></div>`).join('') || FMV.empty('No matching products.'));}
 function switchTab(tab){setCustomerNavigation(tab);if(tab==='offers'){FMV.notice('Current prices and availability are shown in the product catalog.');document.getElementById('product-grid')?.scrollIntoView({behavior:'smooth'});return;}if(tab==='home')document.getElementById('product-grid')?.scrollIntoView({behavior:'smooth'});}
 function formatPortalAmount(amount){return FMV.money(amount);}
-function changePortalCurrency(){portalCurrency='INR';const e=document.getElementById('portal-currency-select');if(e)e.value='INR';FMV.notice('All prices, orders and payments use INR.');}
+function changePortalCurrency(){portalCurrency='INR';const e=document.getElementById('portal-currency-select');if(e)e.value='INR';FMV.notice('Prices and payments are shown in rupees (₹).');}
 async function handleEnterpriseSSO(provider){return FMV.guard(async()=>{await FMV.request('/portal/auth/sso/initiate',{method:'POST',body:{provider,domain:location.hostname}});});}
 function triggerPasswordResetFlow(){FMV.showAuth('signin');document.getElementById('fmv-password-reset')?.click();}
 function togglePortal2FA(){FMV.notice('Email verification remains required for every sign-in.');}
@@ -1271,8 +1271,8 @@ document.addEventListener('fmv:authenticated',async()=>{
 });
 document.addEventListener('fmv:sync',refreshCustomer);
 document.addEventListener('DOMContentLoaded',()=>{
-  const curr=document.getElementById('portal-currency-select');if(curr){curr.innerHTML='<option value="INR">INR ₹</option>';curr.value='INR';}
-  const total=document.getElementById('cart-total-price');if(total){const wrap=document.createElement('label');wrap.className='block fmv-small';wrap.textContent='Payment method';const select=document.createElement('select');select.id='fmv-payment-method';select.className='w-full border rounded-lg p-2';select.innerHTML='<option value="COD">Cash on delivery (INR)</option><option value="Online">Online (UPI / card via Razorpay)</option>';select.addEventListener('change',()=>saveFmvCart());wrap.append(select);total.parentElement.before(wrap);}
+  const curr=document.getElementById('portal-currency-select');if(curr){curr.innerHTML='<option value="INR">INR ₹</option>';curr.value='INR';curr.hidden=true;}
+  const total=document.getElementById('cart-total-price');if(total){const wrap=document.createElement('label');wrap.className='block fmv-small';wrap.textContent='Payment method';const select=document.createElement('select');select.id='fmv-payment-method';select.className='w-full border rounded-lg p-2';select.innerHTML='<option value="COD">Cash on delivery</option><option value="Online">Online (UPI / card via Razorpay)</option>';select.addEventListener('change',()=>saveFmvCart());wrap.append(select);total.parentElement.before(wrap);}
   for(const button of document.querySelectorAll('[onclick]'))if(button.getAttribute('onclick')?.includes('Tracking Link:'))button.setAttribute('onclick','showCustomerTracking()');
   const note=document.getElementById('btn-toggle-2fa');if(note)note.textContent='Email OTP required';
 });
