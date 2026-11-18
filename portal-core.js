@@ -461,6 +461,12 @@
       // Let all controller DOMContentLoaded handlers finish building their views
       // before an authenticated event can start rendering data into them.
       setTimeout(restoreSession,0);
-    }else restoreChallenge();
+    }else{
+      const restoredChallenge = restoreChallenge();
+      // Website sign-up/sign-in links open the existing secure customer auth form.
+      // Never interrupt a pending OTP challenge or an authenticated session.
+      const requestedAuth = new URLSearchParams(location.search).get('auth');
+      if (!restoredChallenge && portal()==='customer' && ['signin','signup'].includes(requestedAuth)) setMode(requestedAuth);
+    }
   });
 })();
