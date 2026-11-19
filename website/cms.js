@@ -84,37 +84,7 @@
       if(response.ok)populate(await response.json());}
     catch(error){/* Keep the static site readable during free-host cold starts. */}
   }
-  function chatWidget(){
-    const outer=document.createElement('aside');outer.className='fmv-public-help';
-    outer.innerHTML=`<button type="button" class="fmv-public-help-toggle" aria-expanded="false">✦ Ask First Milk AI</button>
-      <section class="fmv-public-help-panel" role="dialog" aria-label="First Milk policy chatbot" hidden>
-      <h3>How can we help?</h3><p>Answers come from published company information, not private account records.</p>
-      <div class="fmv-public-chat-feed" aria-live="polite"><p>Ask about First Milk Venture, deliveries, policies or returns.</p></div>
-      <form><label>Question<textarea required maxlength="1200" rows="2" placeholder="What is your return policy?"></textarea></label>
-        <button type="submit">Ask</button></form>
-      <a href="https://customer.firstmilkventure.com/?auth=signin">Visit customer support</a>
-      </section>`;
-    document.body.append(outer);
-    const toggle=outer.querySelector('.fmv-public-help-toggle'),panel=outer.querySelector('section');
-    toggle.addEventListener('click',()=>{panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));});
-    outer.querySelector('form').addEventListener('submit',async event=>{
-      event.preventDefault();const form=event.currentTarget,input=form.querySelector('textarea');
-      const message=input.value.trim();if(message.length<2)return;input.value='';
-      const feed=outer.querySelector('.fmv-public-chat-feed');
-      const write=value=>{const p=document.createElement('p');p.textContent=value;feed.append(p);feed.scrollTop=feed.scrollHeight;};
-      write('You: '+message);
-      const button=form.querySelector('button');button.disabled=true;
-      try{const response=await fetch(api+'/public/assistant/chat',{method:'POST',
-        headers:{'Content-Type':'application/json'},body:JSON.stringify({message}),
-        signal:AbortSignal.timeout(14000)});
-        if(!response.ok)throw Error('Please try again shortly.');
-        const result=await response.json();
-        write('First Milk: '+result.reply);}
-      catch(error){write('Our assistant is temporarily unavailable. Please contact support.');}
-      finally{button.disabled=false;}
-    });
-  }
-  document.addEventListener('DOMContentLoaded',()=>{chatWidget();refresh();
+  document.addEventListener('DOMContentLoaded',()=>{refresh();
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
     setInterval(()=>{if(!document.hidden)refresh();},60000);
   });
