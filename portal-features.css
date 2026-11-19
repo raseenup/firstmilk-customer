@@ -39,3 +39,25 @@
 @media(prefers-reduced-motion:no-preference){.fmv-chat-toggle:hover{transform:translateY(-1px);transition:transform .18s}}
 [data-theme="dark"] .fmv-studio,[data-theme="dark"] .fmv-floating-panel,[data-theme="dark"] .fmv-returns-panel,[data-theme="dark"] .fmv-payment-panel{--fmv-surface:#18292c;--fmv-surface-soft:#20373a;--fmv-input-bg:#122528;--fmv-ink:#edf8f5}
 :focus-visible{outline:3px solid #e8b951;outline-offset:2px}
+
+/* Accessible, mobile-friendly password eye control used by all portal auth screens. */
+.fmv-password-control{position:relative;display:block;width:100%;isolation:isolate}
+.fmv-password-control > input{width:100%;padding-right:3.65rem!important;min-width:0}
+.fmv-password-visibility{position:absolute;top:50%;right:.45rem;transform:translateY(-50%);width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:.65rem;background:transparent;color:var(--fmv-ink,#294d44);cursor:pointer;z-index:2;touch-action:manipulation}
+.fmv-password-visibility svg{width:22px;height:22px;pointer-events:none}
+.fmv-password-visibility:hover{background:rgba(28,124,98,.1)}
+.fmv-password-visibility:focus-visible{outline:3px solid #d6a53a;outline-offset:0}
+.fmv-reset-password-hint{display:block;font-size:.82rem;line-height:1.5;color:var(--fmv-ink,#45625a);opacity:.85;padding:.2rem 0}
+#fmv-password-help{display:block;font-size:.82rem;line-height:1.55;color:var(--fmv-ink,#45625a);opacity:.88}
+#fmv-password-help[hidden]{display:none}
+[data-theme="dark"] .fmv-password-visibility,[data-theme="dark"] .fmv-reset-password-hint,[data-theme="dark"] #fmv-password-help{color:#e8f6f1}
+
+/* FMV AI belongs inside Profile → Help & FAQs, not floating over shopping. */
+.fmv-inline-assistant{display:grid;gap:1rem;padding:clamp(1rem,3vw,1.6rem);border:1px solid #b7d5c5;border-radius:1.2rem;background:var(--fmv-surface,#fff);color:var(--fmv-ink,#14352c)}
+.fmv-inline-assistant[hidden]{display:none!important}
+.fmv-inline-assistant h3{font-size:clamp(1.25rem,3vw,1.6rem);font-weight:850}
+.fmv-inline-assistant header p{margin-top:.4rem;line-height:1.6}
+.fmv-inline-chat-feed{min-height:160px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:.65rem;padding:.9rem;border-radius:.85rem;background:var(--fmv-surface-soft,#f1f8f1);border:1px solid #c5dccf}
+.fmv-inline-chat-feed p{font-size:.89rem;white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere;background:var(--fmv-surface,#fff);padding:.8rem .9rem;border-radius:.7rem}
+.fmv-inline-assistant button{min-height:44px}
+[data-theme="dark"] .fmv-inline-assistant{--fmv-surface:#18292c;--fmv-surface-soft:#20373a;--fmv-ink:#edf8f5}

@@ -822,7 +822,7 @@ async function sendAIChatMessage() {
   } catch (e) {
     if (msg.toLowerCase().includes("invoice")) reply = "Download ZATCA PDF/XML invoices in Tab 4 (Billing & Credit).";
   }
-  feed.innerHTML += `<div class="bg-emerald-50 text-emerald-900 p-2 rounded-lg">🤖 <strong>AI:</strong> ${reply}</div>`;
+  feed.innerHTML += `<div class="bg-emerald-50 text-emerald-900 p-2 rounded-lg">🤖 <strong>FMV AI:</strong> ${reply}</div>`;
   feed.scrollTop = feed.scrollHeight;
 }
 
@@ -1232,7 +1232,7 @@ function submitPortalTicket(){return FMV.guard(async()=>{
 
 function filterKnowledgeBase(){const q=FMV.val('kb-search-input').toLowerCase(),e=FMV.escape;FMV.setHTML('kb-articles-list',portalState.kbArticles.filter(a=>(a.title+' '+a.summary).toLowerCase().includes(q)).map(a=>`<div class="fmv-panel"><strong>${e(a.title)}</strong><p class="fmv-small">${e(a.summary)}</p></div>`).join('') || FMV.empty('No matching help articles.'));}
 function appendChat(text){const feed=document.getElementById('ai-chat-feed');if(feed){const el=document.createElement('p');el.className='fmv-panel';el.textContent=text;feed.append(el);feed.scrollTop=feed.scrollHeight;}}
-function sendAIChatMessage(){return FMV.guard(async()=>{const message=FMV.val('ai-chat-input');if(!message)return;appendChat('You: '+message);document.getElementById('ai-chat-input').value='';const result=await FMV.request('/portal/ai-assistant',{method:'POST',body:{message}});appendChat(result.reply);});}
+function sendAIChatMessage(){return FMV.guard(async()=>{const message=FMV.val('ai-chat-input');if(!message)return;appendChat('You: '+message);document.getElementById('ai-chat-input').value='';const result=await FMV.request('/portal/ai-assistant',{method:'POST',body:{message}});appendChat('FMV AI: '+result.reply);});}
 function escalateChatToHuman(){return FMV.guard(async()=>{const result=await FMV.request('/portal/ai-assistant',{method:'POST',body:{message:FMV.val('ai-chat-input') || 'Please assist with my account.',escalate_to_human:true}});appendChat(result.reply);hydrateEnterprisePortalFromBackend();});}
 function renderCommunityForum(){const e=FMV.escape;FMV.setHTML('community-forum-list',portalState.forumPosts.map(p=>`<div class="fmv-panel"><strong>${e(p.title)}</strong><p class="fmv-small">${e(p.body)}</p><button class="fmv-btn secondary" onclick="voteForumTopic('${e(p.id)}')">Vote · ${Number(p.votes)}</button></div>`).join('') || FMV.empty('No community posts.'));}
 function voteForumTopic(id){return FMV.guard(async()=>{await FMV.request('/portal/forum/'+encodeURIComponent(id)+'/vote',{method:'POST'});hydrateEnterprisePortalFromBackend();});}

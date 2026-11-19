@@ -6,22 +6,21 @@
   const api=(path,options)=>FMV.request(path,options);
   let lastRefresh=0,returns=[],orders=[],transfers=[],settings={enabled:false},pendingIntent=null;
   function makeHelp(){
-    const root=document.createElement('aside');root.id='fmv-customer-assistant';root.className='fmv-floating-help';root.hidden=true;
-    root.innerHTML=`<button type="button" class="fmv-chat-toggle" aria-expanded="false" aria-controls="fmv-customer-assistant-panel">✦ Ask First Milk AI</button>
-      <section class="fmv-floating-panel" id="fmv-customer-assistant-panel" role="dialog" aria-label="First Milk assistance" hidden>
-        <h3>First Milk Venture assistant</h3><p class="fmv-small">Ask about products, delivery, returns or published policies. A human can help with account-specific matters.</p>
-        <div class="fmv-floating-feed" id="fmv-customer-chat-feed" aria-live="polite"><p>Welcome! How can I help?</p></div>
-        <form class="fmv-floating-form" id="fmv-customer-chat"><label for="fmv-customer-chat-text">Your question</label>
-          <textarea id="fmv-customer-chat-text" maxlength="1200" required rows="2" placeholder="What is your refund policy?"></textarea>
-          <button type="submit">Send question</button></form>
-        <button type="button" class="fmv-feature-button" id="fmv-customer-human">Contact customer support</button>
-      </section>`;
-    document.body.append(root);
-    root.querySelector('.fmv-chat-toggle').addEventListener('click',()=>{
-      const panel=$('fmv-customer-assistant-panel');panel.hidden=!panel.hidden;
-      root.querySelector('.fmv-chat-toggle').setAttribute('aria-expanded',String(!panel.hidden));
-      if(!panel.hidden)$('fmv-customer-chat-text').focus();
-    });
+    const profile=$('fmv-profile-area');if(!profile)return;
+    // The assistant is a dedicated Profile screen, never a floating button.
+    const root=document.createElement('section');
+    root.id='fmv-customer-assistant';root.dataset.profileArea='ai';
+    root.className='fmv-inline-assistant fmv-panel';root.hidden=true;
+    root.innerHTML=`<header><span class="customer-eyebrow">HELP & COMPANY INFORMATION</span>
+        <h3>FMV AI</h3><p class="fmv-small">Ask about products, deliveries, returns and approved company policies. For account-specific help, contact support.</p></header>
+        <div class="fmv-inline-chat-feed" id="fmv-customer-chat-feed" role="log" aria-label="FMV AI conversation" aria-live="polite"><p>Welcome to FMV AI. How can I help you?</p></div>
+        <form class="fmv-floating-form" id="fmv-customer-chat">
+          <label for="fmv-customer-chat-text">Ask FMV AI</label>
+          <textarea id="fmv-customer-chat-text" maxlength="1200" required rows="3" placeholder="What is your return policy?"></textarea>
+          <button type="submit">Send question</button>
+        </form>
+        <button type="button" class="fmv-feature-button" id="fmv-customer-human">Contact customer support</button>`;
+    profile.append(root);
     $('fmv-customer-chat').addEventListener('submit',async ev=>{
       ev.preventDefault();if(!FMV.user)return;
       const input=$('fmv-customer-chat-text'),question=input.value.trim();if(!question)return;
@@ -30,13 +29,13 @@
         const p=document.createElement('p');p.textContent=text;feed.append(p);feed.scrollTop=feed.scrollHeight;};
       say('You: '+question);
       const button=ev.currentTarget.querySelector('button');button.disabled=true;
-      try{const r=await api('/assistant/chat',{method:'POST',body:{message:question}});
-        say('First Milk: '+r.reply+(r.sources?.length?'\nBased on: '+r.sources.map(s=>s.title).join(', '):''));}
-      catch(error){say('Could not check the current guidance. '+error.message);}
+      try{
+        const r=await api('/assistant/chat',{method:'POST',body:{message:question}});
+        say('FMV AI: '+r.reply+(r.sources?.length?'\\nSources: '+r.sources.map(s=>s.title).join(', '):''));
+      }catch(error){say('FMV AI could not check the current guidance. '+error.message);}
       finally{button.disabled=false;}
     });
     $('fmv-customer-human').addEventListener('click',()=>{
-      $('fmv-customer-assistant-panel').hidden=true;
       if(typeof openPortalHub==='function')openPortalHub('support-kb');
     });
   }
@@ -142,8 +141,7 @@
     catch(error){if(force)FMV.notice(error.message,true);}
   }
   document.addEventListener('DOMContentLoaded',()=>{makeHelp();makeReturns();makeUPI();});
-  document.addEventListener('fmv:authenticated',()=>{if($('fmv-customer-assistant'))$('fmv-customer-assistant').hidden=false;
-    FMV.guard(()=>refresh(true));});
+  document.addEventListener('fmv:authenticated',()=>{FMV.guard(()=>refresh(true));});
   document.addEventListener('fmv:sync',()=>FMV.guard(()=>refresh()));
   document.addEventListener('fmv:locked',()=>{if($('fmv-customer-assistant'))$('fmv-customer-assistant').hidden=true;
     if($('fmv-customer-chat-feed'))$('fmv-customer-chat-feed').replaceChildren();lastRefresh=0;transfers=[];returns=[];orders=[];});
