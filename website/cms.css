@@ -2,7 +2,7 @@
 .fmv-site-hero-media.contain{object-fit:contain}
 .fmv-site-block{padding:clamp(3rem,7vw,6rem) 0;background:#f4f9f1;color:#153f36;content-visibility:auto;contain-intrinsic-size:auto 460px}
 .fmv-site-block:nth-of-type(even){background:#e5f3ea}
-.fmv-site-block.banner{background:linear-gradient(110deg,#0d6550,#166c78);color:#fff}
+.fmv-site-block.banner{background:var(--fmv-site-brand,#0d6550);color:#fff}
 .fmv-site-block.quote{background:#fdf0ce;color:#31534a}
 .fmv-site-block-inner{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1rem,5vw,4rem);align-items:center}
 .fmv-site-block-inner:not(:has(.fmv-site-block-media)){grid-template-columns:1fr}
