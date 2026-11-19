@@ -21,7 +21,7 @@ test('small round assistant renders only on website, without initial network req
   let requests=0;
   const dom=mount(()=>{requests++;throw Error('network should be idle')});
   const {document}=dom.window;
-  const bubble=document.getElementById('fmv-public-chat-widget').querySelector('button');
+  const bubble=document.querySelector('.fmv-ai-bubble');
   assert.equal(requests,0);
   assert.equal(bubble.getAttribute('aria-label'),'Ask FMV AI');
   assert.equal(bubble.getAttribute('aria-expanded'),'false');
