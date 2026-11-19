@@ -1,0 +1,150 @@
+/* First Milk Venture customer help, return status and UPI receipt tracker. */
+(() => {
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const esc=s=>FMV.escape(s);
+  const api=(path,options)=>FMV.request(path,options);
+  let lastRefresh=0,returns=[],orders=[],transfers=[],settings={enabled:false},pendingIntent=null;
+  function makeHelp(){
+    const root=document.createElement('aside');root.id='fmv-customer-assistant';root.className='fmv-floating-help';root.hidden=true;
+    root.innerHTML=`<button type="button" class="fmv-chat-toggle" aria-expanded="false" aria-controls="fmv-customer-assistant-panel">✦ Ask First Milk AI</button>
+      <section class="fmv-floating-panel" id="fmv-customer-assistant-panel" role="dialog" aria-label="First Milk assistance" hidden>
+        <h3>First Milk Venture assistant</h3><p class="fmv-small">Ask about products, delivery, returns or published policies. A human can help with account-specific matters.</p>
+        <div class="fmv-floating-feed" id="fmv-customer-chat-feed" aria-live="polite"><p>Welcome! How can I help?</p></div>
+        <form class="fmv-floating-form" id="fmv-customer-chat"><label for="fmv-customer-chat-text">Your question</label>
+          <textarea id="fmv-customer-chat-text" maxlength="1200" required rows="2" placeholder="What is your refund policy?"></textarea>
+          <button type="submit">Send question</button></form>
+        <button type="button" class="fmv-feature-button" id="fmv-customer-human">Contact customer support</button>
+      </section>`;
+    document.body.append(root);
+    root.querySelector('.fmv-chat-toggle').addEventListener('click',()=>{
+      const panel=$('fmv-customer-assistant-panel');panel.hidden=!panel.hidden;
+      root.querySelector('.fmv-chat-toggle').setAttribute('aria-expanded',String(!panel.hidden));
+      if(!panel.hidden)$('fmv-customer-chat-text').focus();
+    });
+    $('fmv-customer-chat').addEventListener('submit',async ev=>{
+      ev.preventDefault();if(!FMV.user)return;
+      const input=$('fmv-customer-chat-text'),question=input.value.trim();if(!question)return;
+      input.value='';
+      const feed=$('fmv-customer-chat-feed'),say=text=>{
+        const p=document.createElement('p');p.textContent=text;feed.append(p);feed.scrollTop=feed.scrollHeight;};
+      say('You: '+question);
+      const button=ev.currentTarget.querySelector('button');button.disabled=true;
+      try{const r=await api('/assistant/chat',{method:'POST',body:{message:question}});
+        say('First Milk: '+r.reply+(r.sources?.length?'\nBased on: '+r.sources.map(s=>s.title).join(', '):''));}
+      catch(error){say('Could not check the current guidance. '+error.message);}
+      finally{button.disabled=false;}
+    });
+    $('fmv-customer-human').addEventListener('click',()=>{
+      $('fmv-customer-assistant-panel').hidden=true;
+      if(typeof openPortalHub==='function')openPortalHub('support-kb');
+    });
+  }
+  function makeReturns(){
+    const parent=document.querySelector('.customer-deliveries');if(!parent)return;
+    const section=document.createElement('section');section.id='fmv-returns-panel';section.className='fmv-returns-panel';
+    section.innerHTML=`<h4>Orders, returns & refunds</h4><p>View separate order statuses and request a return after delivery.</p>
+      <div class="fmv-studio-grid">
+      <div><h4>Delivered</h4><div id="fmv-delivered-orders" class="fmv-returns-cards"></div></div>
+      <div><h4>Cancelled</h4><div id="fmv-cancelled-orders" class="fmv-returns-cards"></div></div>
+      <div><h4>Returned or refunded</h4><div id="fmv-returned-orders" class="fmv-returns-cards"></div></div>
+      </div>
+      <form id="fmv-new-return" class="fmv-studio-form">
+        <h4>Request product return or refund</h4>
+        <label>Delivered order<select name="order_id" required><option value="">Select a delivered order</option></select></label>
+        <label>Request<select name="request_type"><option value="return">Return product</option><option value="refund">Refund request</option></select></label>
+        <label>Reason<textarea rows="3" name="reason" minlength="8" maxlength="1500" required placeholder="Tell us what happened with your product."></textarea></label>
+        <button type="submit" class="fmv-feature-button">Submit for review</button>
+        <p class="fmv-small">Submission does not automatically approve a refund. The published policy and finance review apply.</p>
+      </form>`;
+    parent.append(section);
+    $('fmv-new-return').addEventListener('submit',async ev=>{
+      ev.preventDefault();if(!FMV.user)return;
+      const f=ev.currentTarget,button=f.querySelector('button');button.disabled=true;
+      try{await api('/customer/returns',{method:'POST',body:{order_id:f.elements.order_id.value,
+        request_type:f.elements.request_type.value,reason:f.elements.reason.value}});
+        f.reset();FMV.notice('Return/refund request submitted for review.');await refresh(true);}
+      catch(error){FMV.notice(error.message,true);}finally{button.disabled=false;}
+    });
+  }
+  function makeUPI(){
+    const wallet=document.querySelector('[data-profile-area="wallet"]');if(!wallet)return;
+    const section=document.createElement('section');section.id='fmv-upi-payment-panel';section.className='fmv-payment-panel';
+    section.innerHTML=`<h3>Pay using UPI</h3><p id="fmv-upi-receiver" class="fmv-small">Checking availability…</p>
+      <form id="fmv-upi-create" class="fmv-studio-form">
+        <label>Payment amount (₹)<input name="amount" inputmode="decimal" type="text" required placeholder="Enter any positive amount"></label>
+        <label>Payment purpose<input name="note" maxlength="120" value="First Milk Venture customer payment"></label>
+        <button type="submit" class="fmv-feature-button">Generate UPI payment</button>
+      </form>
+      <div id="fmv-upi-open"></div><h4>UPI payment history</h4><div id="fmv-upi-history" class="fmv-returns-cards"></div>
+      <p class="fmv-small">This is an unallocated merchant payment, not an automatic wallet top-up or order settlement. Payment is only confirmed after bank reconciliation. UPI app/bank transaction limits still apply.</p>`;
+    wallet.append(section);
+    $('fmv-upi-create').addEventListener('submit',async ev=>{
+      ev.preventDefault();if(!FMV.user)return;
+      const form=ev.currentTarget,button=form.querySelector('button');button.disabled=true;
+      try{const amount=form.elements.amount.value.trim();
+        if(!/^\d+(?:\.\d{1,2})?$/.test(amount) || !Number.isFinite(Number(amount)) || Number(amount)<=0)
+          throw Error('Enter a positive amount with no more than two decimal places.');
+        const r=await api('/customer/payment/upi',{method:'POST',body:{amount,note:form.elements.note.value}});
+        pendingIntent=r.transfer;
+        const anchor=document.createElement('a');anchor.href=r.upi_url;anchor.textContent='Open payment in UPI app';
+        anchor.className='fmv-feature-button';anchor.rel='noopener';
+        const box=$('fmv-upi-open');box.replaceChildren(anchor);
+        const note=document.createElement('p');note.textContent='Transfer reference: '+r.transfer.id+' · Report your bank transaction reference after paying.';box.append(note);
+        FMV.notice('UPI payment intent created. Bank verification is required.');await refresh(true);
+      }catch(error){FMV.notice(error.message,true);}finally{button.disabled=false;}
+    });
+    $('fmv-upi-history').addEventListener('click',async ev=>{
+      const button=ev.target.closest('[data-upi-report]');if(!button)return;
+      const transaction_reference=prompt('Enter the UPI transaction reference from your payment app:');
+      if(!transaction_reference)return;button.disabled=true;
+      try{await api('/customer/payment/upi/'+encodeURIComponent(button.dataset.upiReport)+'/reported',
+        {method:'POST',body:{transaction_reference}});
+        FMV.notice('Reference submitted. Your payment is NOT yet confirmed.');await refresh(true);}
+      catch(error){FMV.notice(error.message,true);}finally{button.disabled=false;}
+    });
+  }
+  function statusCard(o){return `<div class="fmv-returns-card"><strong>${esc(o.id)}</strong>
+    <small>${esc(o.status)} · ${esc(o.payment_status || '')} · ₹${Number(o.total_amount || 0).toFixed(2)}</small></div>`;}
+  function render(){
+    const user=FMV.user;if(!user)return;
+    const claimsByOrder=new Map(returns.map(x=>[x.order_id,x]));
+    const delivered=orders.filter(o=>o.status==='Delivered');
+    const cancelled=orders.filter(o=>o.status==='Cancelled');
+    const returned=returns.filter(x=>x.status!=='rejected');
+    $('fmv-delivered-orders').innerHTML=delivered.map(statusCard).join('') || '<p>No completed deliveries yet.</p>';
+    $('fmv-cancelled-orders').innerHTML=cancelled.map(statusCard).join('') || '<p>No cancelled orders.</p>';
+    $('fmv-returned-orders').innerHTML=returned.map(x=>`<article class="fmv-returns-card">
+      <strong>${esc(x.id)} · ${esc(x.status.replaceAll('_',' '))}</strong>
+      <small>Order ${esc(x.order_id)} · ${esc(x.reason || '')}</small>
+      ${x.refund_reference?`<small>Refund reference: ${esc(x.refund_reference)}</small>`:''}
+    </article>`).join('') || '<p>No return/refund requests yet.</p>';
+    const select=$('fmv-new-return').elements.order_id,selected=select.value;
+    select.innerHTML='<option value="">Select a delivered order</option>'+delivered.filter(o=>!claimsByOrder.has(o.id) ||
+      claimsByOrder.get(o.id).status==='rejected').map(o=>`<option value="${esc(o.id)}">${esc(o.id)}</option>`).join('');
+    if([...select.options].some(o=>o.value===selected))select.value=selected;
+    $('fmv-upi-receiver').textContent=settings.enabled?
+      'Receiving account: '+settings.payee_name+' · '+settings.upi_id:
+      'UPI is not enabled by the company. Choose an available checkout method.';
+    $('fmv-upi-create').querySelector('button').disabled=!settings.enabled;
+    $('fmv-upi-history').innerHTML=transfers.slice().reverse().map(p=>`<article class="fmv-returns-card">
+      <strong>₹${esc(p.amount)} · ${esc(p.status.replaceAll('_',' '))}</strong><small>${esc(p.id)}</small>
+      ${p.status==='initiated'?`<button class="fmv-feature-button" type="button" data-upi-report="${esc(p.id)}">I paid — report UPI reference</button>`:''}
+      ${p.customer_reference?`<small>Reported: ${esc(p.customer_reference)}</small>`:''}
+      </article>`).join('') || '<p>No UPI transfers yet.</p>';
+  }
+  async function refresh(force=false){
+    if(!FMV.user)return;
+    if(!force && Date.now()-lastRefresh<20000)return;lastRefresh=Date.now();
+    try{const [r,o,p]=await Promise.all([api('/customer/returns'),api('/orders'),api('/customer/payment/upi')]);
+      returns=r.claims || [];orders=o || [];settings=p.settings || {};transfers=p.transfers || [];
+      render();}
+    catch(error){if(force)FMV.notice(error.message,true);}
+  }
+  document.addEventListener('DOMContentLoaded',()=>{makeHelp();makeReturns();makeUPI();});
+  document.addEventListener('fmv:authenticated',()=>{if($('fmv-customer-assistant'))$('fmv-customer-assistant').hidden=false;
+    FMV.guard(()=>refresh(true));});
+  document.addEventListener('fmv:sync',()=>FMV.guard(()=>refresh()));
+  document.addEventListener('fmv:locked',()=>{if($('fmv-customer-assistant'))$('fmv-customer-assistant').hidden=true;
+    if($('fmv-customer-chat-feed'))$('fmv-customer-chat-feed').replaceChildren();lastRefresh=0;transfers=[];returns=[];orders=[];});
+})();
