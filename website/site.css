@@ -293,3 +293,31 @@ h1 em,h2 em{font-style:normal;color:#26856b}
  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
  .js .reveal{opacity:1;transform:none}
 }
+
+/* Careers: dedicated recruitment contact landing page. */
+.career-hero{background:linear-gradient(120deg,#f7f8e8,#e7f4d8);overflow:hidden}
+.career-hero-grid{display:grid;grid-template-columns:1.08fr .92fr;align-items:center;gap:50px;min-height:530px;padding-block:65px}
+.career-hero h1{font-size:clamp(48px,6.3vw,80px);font-weight:950;color:var(--forest);letter-spacing:-.065em;margin:24px 0}
+.career-hero h1 em{font-style:normal;color:#2c9673}
+.career-hero-grid p{font-size:17px;line-height:1.75;color:#5e7368;max-width:520px}
+.career-art{min-height:340px;border-radius:50% 45% 50% 40%;display:grid;place-items:center;position:relative;background:radial-gradient(circle at 50% 47%,#f6d58c 0 36%,#d9edb8 37% 65%,#c6e3b7 66% 100%)}
+.career-art-icon{font-size:145px;filter:drop-shadow(0 18px 17px #57824933);transform:rotate(-12deg)}
+.career-art-star{position:absolute;top:10px;left:55px;color:#308b68;font-size:52px}
+.career-art-heart{position:absolute;top:17px;right:44px;color:#368a68;font-size:58px}
+.career-art-word{position:absolute;right:25px;bottom:18px;font-size:10px;letter-spacing:.16em;font-weight:950;color:#317c5d}
+.career-benefits{background:var(--paper)}
+.career-contact-section{background:var(--forest)}
+.career-mail-notice{display:flex;align-items:start;gap:13px;border-top:1px solid #d1e9db55;padding-top:26px;margin-top:27px}
+.career-mail-notice>span{display:grid;place-items:center;flex:none;width:39px;height:39px;border-radius:13px;background:#d8efb9;color:#135341;font-size:22px}
+.career-mail-notice strong{font-size:15px;color:#effbe7}
+.career-mail-notice p{font-size:13px;line-height:1.8;color:#cae5d6;margin:5px 0}
+.contact-form label .optional{font-weight:500;color:#6c8375}
+.career-privacy{color:#637b6d;font-size:12px;line-height:1.6;margin:15px 0 0}
+#career-status{font-weight:700;font-size:13px;margin:13px 0 0;color:#146d51;min-height:20px}
+#career-status.error{color:#a03939}
+.career-footer-link{color:#d4efbc}
+@media(max-width:850px){.career-hero-grid{gap:20px;min-height:450px}}
+@media(max-width:650px){.career-hero-grid{grid-template-columns:1fr;gap:20px;padding-block:55px 50px}
+.career-hero h1{font-size:clamp(45px,10.5vw,62px)}.career-hero-grid p{font-size:15px}
+.career-art{min-height:270px;max-width:360px;width:100%;margin-inline:auto}.career-art-icon{font-size:108px}
+}
