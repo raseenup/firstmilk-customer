@@ -39,6 +39,8 @@
   function populate(site){
     if(!site || !site.version || version===site.version)return;
     version=site.version;
+    if(/^#[0-9a-fA-F]{6}$/.test(site.background_color || ''))
+      document.documentElement.style.setProperty('--fmv-site-brand',site.background_color);
     for(const [key,text] of Object.entries(site.copy || {})){
       const node=document.querySelector(selectors[key] || ':not(*)');
       if(node && text)node.textContent=text;
@@ -58,6 +60,7 @@
       }
     }
     document.querySelectorAll('[data-fmv-block]').forEach(el=>el.remove());
+    const lastPlacement=new Map();
     for(const block of site.blocks || []){
       if(block.page!==(isCareers?'careers':'home'))continue;
       const anchors={
@@ -68,8 +71,11 @@
       const anchor=document.querySelector(selector) || document.querySelector('.site-footer');
       if(!anchor)continue;
       const section=contentBlock(block);
-      if(block.placement==='before-footer' || isCareers)anchor.before(section);
+      const key=block.page+'|'+block.placement;
+      if(lastPlacement.has(key))lastPlacement.get(key).after(section);
+      else if(block.placement==='before-footer' || isCareers)anchor.before(section);
       else anchor.after(section);
+      lastPlacement.set(key,section);
     }
   }
   async function refresh(){
