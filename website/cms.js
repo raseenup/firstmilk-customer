@@ -120,8 +120,10 @@
     refreshInFlight=null;
   }
   document.addEventListener('DOMContentLoaded',()=>{
-    const savedAt=cached();
-    if(Date.now()-savedAt>CHECK_INTERVAL) refresh(true);
+    cached();
+    // Revalidate in the background on each fresh page visit, so newly
+    // published content appears promptly without delaying initial rendering.
+    refresh(true);
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
     window.addEventListener('pageshow',()=>refresh());
     setInterval(()=>refresh(),CHECK_INTERVAL);
