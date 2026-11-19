@@ -19,3 +19,8 @@ jobs:
           node --check 'experience.js'
           node --check 'customer-features.js'
           node --check 'website/cms.js'
+
+      - name: Install browser-test dependencies
+        run: npm install --no-save jsdom@27.2.0
+      - name: Run shared portal browser tests
+        run: node --test tests/portal-core.test.cjs
