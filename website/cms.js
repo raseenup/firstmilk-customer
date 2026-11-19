@@ -78,14 +78,52 @@
       lastPlacement.set(key,section);
     }
   }
-  async function refresh(){
-    if(document.hidden)return;
-    try{const response=await fetch(api+'/public/website',{cache:'no-store',signal:AbortSignal.timeout(12000)});
-      if(response.ok)populate(await response.json());}
-    catch(error){/* Keep the static site readable during free-host cold starts. */}
+  // Render's static pages never wait for an API call. Reuse recent published
+  // content immediately, then revalidate only when reasonably stale.
+  const CACHE_KEY='fmv-public-website-cms-v2';
+  const CHECK_INTERVAL=180000; // 3 minutes rather than making API requests every minute
+  let lastCheck=0,refreshInFlight=null;
+  function cached(){
+    try{
+      const record=JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null');
+      if(record && Date.now()-record.savedAt<86400000 && record.site?.version){
+        populate(record.site);
+        return record.savedAt;
+      }
+    }catch(error){/* Storage may be disabled. Render static HTML remains visible. */}
+    return 0;
   }
-  document.addEventListener('DOMContentLoaded',()=>{refresh();
+  async function refresh(force=false){
+    if(document.hidden || refreshInFlight || (!force && Date.now()-lastCheck<CHECK_INTERVAL))return;
+    lastCheck=Date.now();
+    const task=(async()=>{
+      try{
+        const response=await fetch(api+'/public/website',{
+          cache:'default',credentials:'omit',signal:AbortSignal.timeout(8000)
+        });
+        if(!response.ok) return;
+        const site=await response.json();
+        if(!site || typeof site.version!=='number' || !Array.isArray(site.blocks)
+            || !site.copy || typeof site.copy!=='object') return;
+        populate(site);
+        // Public company copy only. Limit browser storage footprint.
+        const serial=JSON.stringify({site,savedAt:Date.now()});
+        if(serial.length<80000){
+          try{sessionStorage.setItem(CACHE_KEY,serial);}catch(error){}
+        }
+      }catch(error){
+        /* Keep the static site (and last approved copy) visible during API cold starts. */
+      }
+    })();
+    refreshInFlight=task;
+    await task;
+    refreshInFlight=null;
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    const savedAt=cached();
+    if(Date.now()-savedAt>CHECK_INTERVAL) refresh(true);
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
-    setInterval(()=>{if(!document.hidden)refresh();},60000);
+    window.addEventListener('pageshow',()=>refresh());
+    setInterval(()=>refresh(),CHECK_INTERVAL);
   });
 })();
