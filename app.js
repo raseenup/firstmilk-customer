@@ -1272,7 +1272,7 @@ document.addEventListener('fmv:authenticated',async()=>{
 document.addEventListener('fmv:sync',refreshCustomer);
 document.addEventListener('DOMContentLoaded',()=>{
   const curr=document.getElementById('portal-currency-select');if(curr){curr.innerHTML='<option value="INR">INR ₹</option>';curr.value='INR';curr.hidden=true;}
-  const total=document.getElementById('cart-total-price');if(total){const wrap=document.createElement('label');wrap.className='block fmv-small';wrap.textContent='Payment method';const select=document.createElement('select');select.id='fmv-payment-method';select.className='w-full border rounded-lg p-2';select.innerHTML='<option value="COD">Cash on delivery</option><option value="Online">Online (UPI / card via Razorpay)</option>';select.addEventListener('change',()=>saveFmvCart());wrap.append(select);total.parentElement.before(wrap);}
+  const total=document.getElementById('cart-total-price');if(total){const wrap=document.createElement('label');wrap.className='block fmv-small';wrap.textContent='Payment method';const select=document.createElement('select');select.id='fmv-payment-method';select.className='w-full border rounded-lg p-2';select.innerHTML='<option value="COD">Cash on delivery</option><option value="UPI / Online (INR)">UPI — verified gateway checkout</option><option value="Online">Card / other online payment methods</option>';select.addEventListener('change',()=>saveFmvCart());wrap.append(select);total.parentElement.before(wrap);}
   for(const button of document.querySelectorAll('[onclick]'))if(button.getAttribute('onclick')?.includes('Tracking Link:'))button.setAttribute('onclick','showCustomerTracking()');
   const note=document.getElementById('btn-toggle-2fa');if(note)note.textContent='Email OTP required';
 });
