@@ -1,0 +1,28 @@
+/* Website-only FMV AI — compact circular launcher with accessible chat panel. */
+.fmv-ai-widget{position:fixed;right:clamp(12px,2.5vw,26px);bottom:calc(16px + env(safe-area-inset-bottom));z-index:350;font-family:inherit}
+.fmv-ai-bubble{display:grid;place-items:center;width:56px;height:56px;padding:0;appearance:none;border:2px solid rgba(255,255,255,.87);border-radius:50%;background:#086d56;color:#fff;box-shadow:0 9px 28px rgba(6,56,42,.26);cursor:pointer;transition:transform .16s ease,background-color .16s ease}
+.fmv-ai-bubble svg{width:29px;height:29px;stroke:currentColor;pointer-events:none}
+.fmv-ai-bubble:hover{background:#075641;transform:translateY(-2px)}
+.fmv-ai-bubble:active{transform:translateY(0)}
+.fmv-ai-bubble:focus-visible,.fmv-ai-close:focus-visible,.fmv-ai-send:focus-visible{outline:3px solid #f8ce78;outline-offset:3px}
+.fmv-ai-panel{position:absolute;right:0;bottom:calc(100% + 12px);display:flex;flex-direction:column;gap:12px;width:min(360px,calc(100vw - 24px));max-height:min(590px,calc(100dvh - 110px));padding:16px;border:1px solid #b9d9cb;border-radius:19px;background:#fff;color:#143f34;box-shadow:0 18px 54px rgba(9,42,32,.24);overflow:hidden}
+.fmv-ai-panel[hidden]{display:none!important}
+.fmv-ai-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.fmv-ai-title{display:grid;gap:0}
+.fmv-ai-title strong{font-size:19px;font-weight:850;letter-spacing:-.02em}
+.fmv-ai-title small{font-size:11px;color:#60796e}
+.fmv-ai-close{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:50%;background:#e8f3ec;color:#234e3e;font-size:29px;line-height:1;cursor:pointer}
+.fmv-ai-description{margin:0;font-size:12px;line-height:1.55;color:#4c675d}
+.fmv-ai-messages{display:flex;flex-direction:column;align-items:stretch;gap:10px;min-height:125px;max-height:220px;overflow-y:auto;overscroll-behavior:contain;padding:12px;border-radius:12px;border:1px solid #d4e5d9;background:#f4f9f3}
+.fmv-ai-message{margin:0;padding:9px 11px;border-radius:12px;font-size:13px;line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap;max-width:95%}
+.fmv-ai-reply{align-self:flex-start;background:#fff;border:1px solid #dfebe1;color:#1b4134}
+.fmv-ai-mine{align-self:flex-end;background:#0d7558;color:#fff}
+.fmv-ai-form{display:grid;gap:7px;margin:0}
+.fmv-ai-form label{font-size:12px;font-weight:750}
+.fmv-ai-question{width:100%;min-height:70px;max-height:140px;padding:10px 12px;resize:vertical;border:1px solid #9cbbae;border-radius:12px;background:#fff;color:#183f35;font:inherit;font-size:14px}
+.fmv-ai-send{min-height:44px;padding:10px 14px;border:0;border-radius:11px;background:#0a765c;color:#fff;font-weight:800;font-size:13px;cursor:pointer}
+.fmv-ai-send:disabled{opacity:.62;cursor:wait}
+.fmv-ai-disclaimer{margin:0;font-size:10.5px;line-height:1.4;color:#667d70}
+.fmv-ai-support{font-size:12px;font-weight:750;color:#076a52;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:380px){.fmv-ai-widget{right:10px;bottom:calc(10px + env(safe-area-inset-bottom))}.fmv-ai-bubble{width:52px;height:52px}.fmv-ai-panel{padding:12px;gap:9px}}
+@media(prefers-reduced-motion:reduce){.fmv-ai-bubble{transition:none}}
