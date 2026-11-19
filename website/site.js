@@ -85,4 +85,40 @@
       window.location.href = mailto;
     });
   }
+  // Careers uses the same zero-backend mail composer. CVs cannot be attached by
+  // a mailto URL: ask applicants to attach the file in their own mail app.
+  const careerForm = document.getElementById('career-form');
+  const careerStatus = document.getElementById('career-status');
+  if (careerForm && careerStatus) {
+    careerForm.addEventListener('submit', event => {
+      event.preventDefault();
+      careerStatus.classList.remove('error');
+      if (!careerForm.reportValidity()) {
+        careerStatus.classList.add('error');
+        careerStatus.textContent = 'Please complete the required details before preparing your message.';
+        return;
+      }
+      const val = id => document.getElementById(id).value.trim();
+      const name = val('career-name');
+      const email = val('career-email');
+      const phone = val('career-phone');
+      const interest = val('career-interest');
+      const message = val('career-message');
+      const subject = 'Career enquiry | ' + interest;
+      const body = [
+        'Hello First Milk Venture team,', '',
+        'I would like to express interest in opportunities with First Milk Venture.', '',
+        message, '',
+        'Name: ' + name, 'Email: ' + email,
+        'Phone: ' + (phone || 'Not provided'),
+        'Area of interest: ' + interest, '',
+        'Please attach your CV/resume before sending this email.'
+      ].join('\n');
+      const url = 'mailto:support@firstmilkventure.com?subject=' +
+        encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      careerStatus.textContent = 'Opening your email app. Attach your CV if available, review the draft, then press Send. If no app opens, email support@firstmilkventure.com.';
+      window.location.href = url;
+    });
+  }
+
 })();
