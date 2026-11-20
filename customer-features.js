@@ -163,6 +163,8 @@
           <strong>Item pickup: ${esc(pickup.status)}</strong>
           <small>Scheduled: ${esc(pickup.scheduled_date || 'To be arranged')} · Driver: ${esc(pickup.driver_name || 'Pending')}</small>
           ${pickup.pickup_pin?`<p class="fmv-pickup-secret"><span>One-time collection PIN</span><strong>${esc(pickup.pickup_pin)}</strong></p><small>Give this code only when the assigned driver is physically collecting the item. Do not share login or delivery PINs.</small>`:''}
+          ${pickup.yard_result?`<small>Yard quality: ${pickup.yard_result==='good'?'Product inspection completed':'Quality review in progress'}</small>`:''}
+          <small>Refund eligibility: ${pickup.refund_eligibility==='approved_for_processing'?'Approved for processing — payment not yet confirmed':'Awaiting authorized review'}</small>
           <small>${esc(pickup.instructions || '')}</small>
         </div>`:''}
       </article>`;
