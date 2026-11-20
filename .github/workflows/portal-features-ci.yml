@@ -27,4 +27,4 @@ jobs:
       - name: Install browser-test dependencies
         run: npm install --no-save jsdom@27.2.0
       - name: Run shared portal browser tests
-        run: node --test tests/portal-core.test.cjs tests/returned-orders.test.cjs website/tests/chat.test.cjs
+        run: node --test tests/return-collection-ui.test.cjs tests/portal-core.test.cjs tests/returned-orders.test.cjs website/tests/chat.test.cjs
