@@ -78,6 +78,6 @@
   display:block;margin:3px 0 12px;font-size:11px;
   color:var(--fmv-ink,#516b61);opacity:.75;line-height:1.5;
 }
-.fmv-remember-identifier-row[hidden]+.fmv-remember-identifier-help{display:none}
+#fmv-remember-identifier-row[hidden]+.fmv-remember-identifier-help{display:none}
 [data-theme="dark"] .fmv-remember-identifier,
 [data-theme="dark"] .fmv-remember-identifier-help{color:#e9f6f1}
