@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const e=value=>FMV.escape(value);
-  let section='recent',orders=[],subscriptionSection='active',subscriptions=[],returnClaims=new Map();
+  let section='recent',orders=[],subscriptionSection='active',subscriptions=[],returnClaims=new Map(),claimSignature='';
   const group=order=>order.status==='Delivered'?'delivered':order.status==='Cancelled'?'cancelled':'recent';
   // Orders can be delivered AND later involved in a return. Keep the original
   // Recent/Delivered/Cancelled filters intact while adding a history view.
@@ -16,6 +16,11 @@
     }
   }
   function updateReturns(claims){
+    const incoming=Array.isArray(claims)?claims:[];
+    // Skip costly re-rendering when a background sync has no new claim state.
+    const signature=JSON.stringify(incoming.map(item=>[item?.id,item?.order_id,item?.status,item?.refund_reference,item?.updated_at]));
+    if(signature===claimSignature)return;
+    claimSignature=signature;
     const next=new Map();
     for(const claim of Array.isArray(claims)?claims:[]){
       if(!claim || typeof claim.order_id!=='string' || !claim.order_id)continue;
@@ -24,7 +29,7 @@
     }
     returnClaims=next;
     update(orders);
-    if(section==='returned' && FMV.user)loadDashboardStatus({orders,subscriptions});
+    if((section==='returned' || section==='delivered') && FMV.user)loadDashboardStatus({orders,subscriptions});
   }
   function updateSubscriptions(items){subscriptions=items;for(const button of document.querySelectorAll('[data-subscription-section]')){const key=button.dataset.subscriptionSection;button.setAttribute('aria-selected',String(subscriptionSection===key));button.querySelector('span').textContent=items.filter(s=>s.status===key).length;}}
   function actions(order){
@@ -74,7 +79,7 @@
     });
   });
   document.addEventListener('fmv:locked',()=>{
-    orders=[];subscriptions=[];returnClaims=new Map();section='recent';subscriptionSection='active';
+    orders=[];subscriptions=[];returnClaims=new Map();claimSignature='';section='recent';subscriptionSection='active';
     for(const button of document.querySelectorAll('[data-order-section]')){
       button.setAttribute('aria-selected',String(button.dataset.orderSection==='recent'));
       const count=button.querySelector('span');if(count)count.textContent='0';
