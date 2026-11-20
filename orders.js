@@ -87,6 +87,7 @@
   });
   window.FMVOrders={
     update,updateReturns,
+    redraw:()=>{if(FMV.user)loadDashboardStatus({orders,subscriptions});},
     filter:items=>items.filter(o=>inSection(o,section)),
     claimFor:order=>returnClaims.get(order.id)||null,
     actions,updateSubscriptions,
