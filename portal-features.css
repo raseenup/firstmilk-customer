@@ -61,3 +61,23 @@
 .fmv-inline-chat-feed p{font-size:.89rem;white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere;background:var(--fmv-surface,#fff);padding:.8rem .9rem;border-radius:.7rem}
 .fmv-inline-assistant button{min-height:44px}
 [data-theme="dark"] .fmv-inline-assistant{--fmv-surface:#18292c;--fmv-surface-soft:#20373a;--fmv-ink:#edf8f5}
+
+/* Optional sign-in identifier convenience: never store a password or bearer token. */
+.fmv-remember-identifier{
+  display:flex!important;align-items:flex-start;gap:9px;
+  font-size:12px;line-height:1.45;font-weight:600;cursor:pointer;
+  color:var(--fmv-ink,#254f41);margin-top:7px;
+}
+.fmv-remember-identifier[hidden]{display:none!important}
+.fmv-remember-identifier input[type="checkbox"]{
+  flex:0 0 18px!important;width:18px!important;height:18px!important;
+  min-height:18px!important;margin:0;accent-color:#087b5c;
+}
+.fmv-remember-identifier span{flex:1;min-width:0}
+.fmv-remember-identifier-help{
+  display:block;margin:3px 0 12px;font-size:11px;
+  color:var(--fmv-ink,#516b61);opacity:.75;line-height:1.5;
+}
+.fmv-remember-identifier-row[hidden]+.fmv-remember-identifier-help{display:none}
+[data-theme="dark"] .fmv-remember-identifier,
+[data-theme="dark"] .fmv-remember-identifier-help{color:#e9f6f1}
