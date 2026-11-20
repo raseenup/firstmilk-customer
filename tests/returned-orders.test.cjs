@@ -90,3 +90,37 @@ test('Returned order cards show claim status without exposing delivery PIN',()=>
   assert.match(appSource,/selectedOrderSection==='returned'\?'':`<div class="customer-pin">/);
   assert.match(appSource,/No return or refund requests yet/);
 });
+
+
+test('Delivered order shows Request Return and routes to its own preselected form',t=>{
+  const {w}=setup(t);
+  w.FMVOrders.update(orders);
+  const actions=w.FMVOrders.actions(orders[1]);
+  assert.match(actions,/data-customer-action="request-return"/);
+  assert.match(actions,/Request return/);
+  const holder=w.document.createElement('section');
+  holder.innerHTML=actions;w.document.body.append(holder);
+  const selected=[];
+  w.FMV.guard=action=>action();
+  w.FMVReturns={open:id=>selected.push(id)};
+  holder.querySelector('[data-customer-action="request-return"]').click();
+  assert.deepEqual(selected,['B']);
+  assert.doesNotMatch(w.FMVOrders.actions(orders[0]),/request-return/);
+});
+
+test('Approved or pending claims show Return status instead of duplicate requests',t=>{
+  const {w}=setup(t);
+  w.FMVOrders.update(orders);
+  w.FMVOrders.updateReturns([{id:'RMA-777',order_id:'B',status:'under_review'}]);
+  assert.match(w.FMVOrders.actions(orders[1]),/data-customer-action="view-return"/);
+  assert.doesNotMatch(w.FMVOrders.actions(orders[1]),/data-customer-action="request-return"/);
+  w.FMVOrders.updateReturns([{id:'RMA-777',order_id:'B',status:'rejected'}]);
+  assert.match(w.FMVOrders.actions(orders[1]),/data-customer-action="request-return"/);
+});
+
+test('Return processing requires explicit customer form submission and backend validation',()=>{
+  assert.match(featureSource,/function openReturnForm\(orderId\)/);
+  assert.match(featureSource,/order\.status!=='Delivered'/);
+  assert.match(featureSource,/api\('\/customer\/returns',\{method:'POST'/);
+  assert.match(featureSource,/window\.FMVExperience\?\.navigate\('profile','orders'\)/);
+});
