@@ -335,8 +335,17 @@
     scheduleSync();
   }
   async function logout(){
-    const revocation=token()?request('/auth/logout',{method:'POST'}):Promise.resolve();lock();
-    try{await revocation;}catch(e){if(![401,403].includes(e.status))gateMessage('Signed out on this device. The server could not confirm revocation of this session; it may remain valid until its normal expiry.',true);}
+    // Revoke using the original session, then lock locally immediately.
+    // A successful server response is intentionally classified as "stale" by
+    // rawRequest after the token is cleared; that expected state is not a
+    // revocation failure and must not display a misleading security warning.
+    const revocation=token()?request('/auth/logout',{method:'POST'}):Promise.resolve();
+    lock();
+    try{await revocation;}
+    catch(error){
+      if(error.stale || [401,403].includes(error.status))return;
+      gateMessage('Signed out on this device. Server revocation could not be confirmed. Please retry when your connection is available.',true);
+    }
   }
   async function resendCode(){
     updateChallengeClock();if(document.getElementById('fmv-resend').disabled)return;
