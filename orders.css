@@ -1,3 +1,26 @@
 .fmv-order-sections{display:flex;gap:8px;overflow-x:auto;max-width:100%;margin:16px 0;padding-bottom:6px}.fmv-order-sections button{display:flex;gap:8px;align-items:center;flex-shrink:0;padding:10px 13px;border:1px solid #c8ddd0;border-radius:13px;background:#f2f7f0;color:#215541;font-size:14px;font-weight:750}.fmv-order-sections button[aria-selected=true]{background:#1c624b;color:white}.fmv-order-sections span{font-size:12px;border-radius:20px;padding:1px 6px;background:#ffffff33}.customer-order-card .fmv-flex{flex-wrap:wrap;gap:8px}.customer-order-card .fmv-btn{font-size:12px}.fmv-order-sections+div:empty{min-height:100px}
 
 .fmv-order-sections{flex-wrap:wrap;overflow:visible}.fmv-order-sections button{flex:1 1 auto;justify-content:center;min-width:0}.fmv-location-ads{display:grid;gap:20px;justify-items:center;margin:24px 0}.fmv-location-ads .fmv-campaign{width:var(--campaign-width,1200px);max-width:100%;margin:0}.fmv-location-ads .fmv-campaign>:is(img,video){width:100%;height:auto;aspect-ratio:var(--campaign-ratio,4);object-fit:var(--campaign-fit,contain);background:#e7f1ec}.fmv-location-ads .fmv-campaign-copy{padding:22px}.fmv-location-ads .fmv-campaign-copy p:empty{display:none}@media(max-width:600px){.fmv-order-sections{gap:6px}.fmv-order-sections button{font-size:12px;padding:10px 8px}.fmv-location-ads .fmv-campaign-copy{padding:16px}}
+
+
+/* Customer My Orders: exactly four readable tabs in a compact 2 × 2 grid. */
+.customer-orders-column .fmv-order-sections:not(.fmv-subscription-sections){
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+  margin:14px 0 16px;padding-bottom:0;max-width:100%;overflow:visible;
+}
+.customer-orders-column .fmv-order-sections:not(.fmv-subscription-sections) button{
+  display:flex;justify-content:center;align-items:center;gap:6px;
+  width:100%;min-width:0;min-height:48px;padding:10px 5px;
+  white-space:nowrap;line-height:1.25;font-size:clamp(11px,2.6vw,14px);
+}
+.customer-orders-column .fmv-order-sections:not(.fmv-subscription-sections) button span{
+  flex-shrink:0;font-variant-numeric:tabular-nums;
+}
+.fmv-order-claim-detail{
+  display:grid;gap:6px;margin:12px 0;padding:12px;
+  border-radius:12px;border:1px solid #bbdacf;background:#f2f9f5;
+  color:#205540;overflow-wrap:anywhere;font-size:12px;
+}
+.fmv-order-claim-detail p{margin:0;line-height:1.45}
+.fmv-order-claim-detail strong{text-transform:capitalize}
+[data-theme="dark"] .fmv-order-claim-detail{background:#1b3832;color:#eaf8f0;border-color:#356c58}
