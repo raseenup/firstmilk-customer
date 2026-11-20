@@ -248,7 +248,9 @@
       }
     })().finally(()=>{refreshing=null;});
     void refreshWallet();
-    void refreshPickups();
+    // Pickup PINs are sensitive: load only while the customer explicitly
+    // views Returned history, not in the background on every home page.
+    if(window.FMVOrders?.section==='returned')void refreshPickups();
     return refreshing;
   }
   window.FMVReturns={open:openReturnForm,refresh:()=>refresh(true),pickupFor:claimId=>pickups.find(p=>p.id===claimId)||null};
@@ -257,6 +259,11 @@
     // Fetch receiving UPI details on demand if wallet is opened.
     document.addEventListener('click',event=>{
       if(event.target.closest('[data-fmv-action="wallet"]'))void refreshWallet(true);
+      if(event.target.closest('[data-order-section="returned"]'))void refreshPickups(true);
+      if(event.target.closest('[data-order-section]') &&
+         !event.target.closest('[data-order-section="returned"]')){
+        pickups=[];lastPickupRefresh=0;
+      }
     });
   });
   document.addEventListener('fmv:authenticated',()=>{FMV.guard(()=>refresh(true));});
