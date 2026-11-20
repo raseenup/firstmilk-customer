@@ -197,7 +197,7 @@
         pickups=Array.isArray(response.pickups)?response.pickups:[];
         lastPickupRefresh=Date.now();
         render();
-        if(window.FMVOrders?.section==='returned')loadDashboardStatus();
+        if(window.FMVOrders?.section==='returned')window.FMVOrders?.redraw();
       }catch(error){
         if(force && FMV.user?.id===owner)FMV.notice('Return pickup information could not be refreshed.',true);
       }
