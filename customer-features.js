@@ -5,7 +5,7 @@
   const esc=s=>FMV.escape(s);
   const api=(path,options)=>FMV.request(path,options);
   let lastRefresh=0,lastWalletRefresh=0,refreshing=null,walletRefreshing=null;
-  let returns=[],orders=[],transfers=[],settings={enabled:false},pendingIntent=null;
+  let returns=[],orders=[],transfers=[],pickups=[],pickupRefreshing=null,lastPickupRefresh=0,settings={enabled:false},pendingIntent=null;
   function makeHelp(){
     const profile=$('fmv-profile-area');if(!profile)return;
     // The assistant is a dedicated Profile screen, never a floating button.
@@ -153,11 +153,20 @@
     const returned=returns.filter(x=>x.status!=='rejected');
     $('fmv-delivered-orders').innerHTML=delivered.map(statusCard).join('') || '<p>No completed deliveries yet.</p>';
     $('fmv-cancelled-orders').innerHTML=cancelled.map(statusCard).join('') || '<p>No cancelled orders.</p>';
-    $('fmv-returned-orders').innerHTML=returned.map(x=>`<article class="fmv-returns-card">
-      <strong>${esc(x.id)} · ${esc(x.status.replaceAll('_',' '))}</strong>
-      <small>Order ${esc(x.order_id)} · ${esc(x.reason || '')}</small>
-      ${x.refund_reference?`<small>Refund reference: ${esc(x.refund_reference)}</small>`:''}
-    </article>`).join('') || '<p>No return/refund requests yet.</p>';
+    $('fmv-returned-orders').innerHTML=returned.map(x=>{
+      const pickup=pickups.find(p=>p.id===x.id);
+      return `<article class="fmv-returns-card">
+        <strong>${esc(x.id)} · ${esc(x.status.replaceAll('_',' '))}</strong>
+        <small>Order ${esc(x.order_id)} · ${esc(x.reason || '')}</small>
+        ${x.refund_reference?`<small>Refund reference: ${esc(x.refund_reference)}</small>`:''}
+        ${pickup?`<div class="fmv-pickup-info">
+          <strong>Item pickup: ${esc(pickup.status)}</strong>
+          <small>Scheduled: ${esc(pickup.scheduled_date || 'To be arranged')} · Driver: ${esc(pickup.driver_name || 'Pending')}</small>
+          ${pickup.pickup_pin?`<p class="fmv-pickup-secret"><span>One-time collection PIN</span><strong>${esc(pickup.pickup_pin)}</strong></p><small>Give this code only when the assigned driver is physically collecting the item. Do not share login or delivery PINs.</small>`:''}
+          <small>${esc(pickup.instructions || '')}</small>
+        </div>`:''}
+      </article>`;
+    }).join('') || '<p>No return/refund requests yet.</p>';
     const select=$('fmv-new-return').elements.order_id,selected=select.value;
     select.innerHTML='<option value="">Select a delivered order</option>'+delivered.filter(o=>!claimsByOrder.has(o.id) ||
       claimsByOrder.get(o.id).status==='rejected').map(o=>`<option value="${esc(o.id)}">${esc(o.id)}</option>`).join('');
@@ -175,6 +184,25 @@
       ${p.status==='initiated'?`<button class="fmv-feature-button" type="button" data-upi-report="${esc(p.id)}">I paid — report UPI reference</button>`:''}
       ${p.customer_reference?`<small>Reported: ${esc(p.customer_reference)}</small>`:''}
       </article>`).join('') || '<p>No UPI transfers yet.</p>';
+  }
+  function refreshPickups(force=false){
+    if(!FMV.user)return Promise.resolve();
+    if(pickupRefreshing)return pickupRefreshing;
+    if(!force && Date.now()-lastPickupRefresh<15000)return Promise.resolve();
+    const owner=FMV.user.id;
+    pickupRefreshing=(async()=>{
+      try{
+        const response=await api('/customer/return-collections');
+        if(FMV.user?.id!==owner)return;
+        pickups=Array.isArray(response.pickups)?response.pickups:[];
+        lastPickupRefresh=Date.now();
+        render();
+        if(window.FMVOrders?.section==='returned')window.FMVOrders?.redraw();
+      }catch(error){
+        if(force && FMV.user?.id===owner)FMV.notice('Return pickup information could not be refreshed.',true);
+      }
+    })().finally(()=>{pickupRefreshing=null;});
+    return pickupRefreshing;
   }
   function refreshWallet(force=false){
     if(!FMV.user)return Promise.resolve();
@@ -220,21 +248,29 @@
       }
     })().finally(()=>{refreshing=null;});
     void refreshWallet();
+    // Pickup PINs are sensitive: load only while the customer explicitly
+    // views Returned history, not in the background on every home page.
+    if(window.FMVOrders?.section==='returned')void refreshPickups();
     return refreshing;
   }
-  window.FMVReturns={open:openReturnForm,refresh:()=>refresh(true)};
+  window.FMVReturns={open:openReturnForm,refresh:()=>refresh(true),pickupFor:claimId=>pickups.find(p=>p.id===claimId)||null};
   document.addEventListener('DOMContentLoaded',()=>{
     makeHelp();makeReturns();makeUPI();
     // Fetch receiving UPI details on demand if wallet is opened.
     document.addEventListener('click',event=>{
       if(event.target.closest('[data-fmv-action="wallet"]'))void refreshWallet(true);
+      if(event.target.closest('[data-order-section="returned"]'))void refreshPickups(true);
+      if(event.target.closest('[data-order-section]') &&
+         !event.target.closest('[data-order-section="returned"]')){
+        pickups=[];lastPickupRefresh=0;
+      }
     });
   });
   document.addEventListener('fmv:authenticated',()=>{FMV.guard(()=>refresh(true));});
   document.addEventListener('fmv:sync',()=>FMV.guard(()=>refresh()));
   document.addEventListener('fmv:locked',()=>{if($('fmv-customer-assistant'))$('fmv-customer-assistant').hidden=true;
     if($('fmv-customer-chat-feed'))$('fmv-customer-chat-feed').replaceChildren();
-    lastRefresh=0;lastWalletRefresh=0;returns=[];orders=[];transfers=[];settings={enabled:false};
+    lastRefresh=0;lastWalletRefresh=0;lastPickupRefresh=0;returns=[];orders=[];transfers=[];pickups=[];settings={enabled:false};
     // Clear customer-visible data immediately, even if old requests resolve later.
     window.FMVOrders?.updateReturns([]);
     if($('fmv-upi-history'))$('fmv-upi-history').replaceChildren();
