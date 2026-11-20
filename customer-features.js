@@ -136,13 +136,18 @@
     if(!FMV.user)return;
     if(!force && Date.now()-lastRefresh<20000)return;lastRefresh=Date.now();
     try{const [r,o,p]=await Promise.all([api('/customer/returns'),api('/orders'),api('/customer/payment/upi')]);
-      returns=r.claims || [];orders=o || [];settings=p.settings || {};transfers=p.transfers || [];
-      render();}
+      returns=Array.isArray(r.claims)?r.claims:[];orders=Array.isArray(o)?o:[];
+      settings=p.settings || {};transfers=Array.isArray(p.transfers)?p.transfers:[];
+      render();
+      // Share the same owner-scoped return claims with the primary order tabs.
+      // Counts and Returned cards reflect admin updates without a new backend schema.
+      window.FMVOrders?.updateReturns(returns);}
     catch(error){if(force)FMV.notice(error.message,true);}
   }
   document.addEventListener('DOMContentLoaded',()=>{makeHelp();makeReturns();makeUPI();});
   document.addEventListener('fmv:authenticated',()=>{FMV.guard(()=>refresh(true));});
   document.addEventListener('fmv:sync',()=>FMV.guard(()=>refresh()));
   document.addEventListener('fmv:locked',()=>{if($('fmv-customer-assistant'))$('fmv-customer-assistant').hidden=true;
-    if($('fmv-customer-chat-feed'))$('fmv-customer-chat-feed').replaceChildren();lastRefresh=0;transfers=[];returns=[];orders=[];});
+    if($('fmv-customer-chat-feed'))$('fmv-customer-chat-feed').replaceChildren();lastRefresh=0;transfers=[];returns=[];orders=[];
+    window.FMVOrders?.updateReturns([]);});
 })();

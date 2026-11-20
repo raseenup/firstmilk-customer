@@ -1,9 +1,31 @@
-/* Three order sections, order conversations/reviews and profile preferences. */
+/* Order sections including return/refund history, conversations/reviews and profile preferences. */
 (() => {
   'use strict';
-  const e=value=>FMV.escape(value);let section='recent',orders=[],subscriptionSection='active',subscriptions=[];
+  const e=value=>FMV.escape(value);
+  let section='recent',orders=[],subscriptionSection='active',subscriptions=[],returnClaims=new Map();
   const group=order=>order.status==='Delivered'?'delivered':order.status==='Cancelled'?'cancelled':'recent';
-  function update(items){orders=items;for(const button of document.querySelectorAll('[data-order-section]')){const key=button.dataset.orderSection;button.setAttribute('aria-selected',String(section===key));button.querySelector('span').textContent=items.filter(o=>group(o)===key).length;}}
+  // Orders can be delivered AND later involved in a return. Keep the original
+  // Recent/Delivered/Cancelled filters intact while adding a history view.
+  const inSection=(order,key)=>key==='returned'?returnClaims.has(order.id):group(order)===key;
+  function update(items){
+    orders=Array.isArray(items)?items:[];
+    for(const button of document.querySelectorAll('[data-order-section]')){
+      const key=button.dataset.orderSection;
+      button.setAttribute('aria-selected',String(section===key));
+      button.querySelector('span').textContent=orders.filter(o=>inSection(o,key)).length;
+    }
+  }
+  function updateReturns(claims){
+    const next=new Map();
+    for(const claim of Array.isArray(claims)?claims:[]){
+      if(!claim || typeof claim.order_id!=='string' || !claim.order_id)continue;
+      const earlier=next.get(claim.order_id);
+      if(!earlier || String(claim.created_at||'')>=String(earlier.created_at||''))next.set(claim.order_id,claim);
+    }
+    returnClaims=next;
+    update(orders);
+    if(section==='returned' && FMV.user)loadDashboardStatus({orders,subscriptions});
+  }
   function updateSubscriptions(items){subscriptions=items;for(const button of document.querySelectorAll('[data-subscription-section]')){const key=button.dataset.subscriptionSection;button.setAttribute('aria-selected',String(subscriptionSection===key));button.querySelector('span').textContent=items.filter(s=>s.status===key).length;}}
   function actions(order){
     const unread=FMVWorkspace.snapshot?.chat_unread?.[order.id] || 0;
@@ -22,7 +44,7 @@
   }
   document.addEventListener('DOMContentLoaded',()=>{
     const list=document.getElementById('dashboard-orders-list'),nav=document.createElement('div');nav.className='fmv-order-sections';nav.setAttribute('role','tablist');nav.setAttribute('aria-label','My order sections');
-    nav.innerHTML=['recent','delivered','cancelled'].map(key=>`<button type="button" role="tab" aria-controls="dashboard-orders-list" aria-selected="${key===section}" data-order-section="${key}">${key[0].toUpperCase()+key.slice(1)} <span>0</span></button>`).join('');list.before(nav);list.setAttribute('role','tabpanel');
+    nav.innerHTML=['recent','delivered','cancelled','returned'].map(key=>`<button type="button" role="tab" aria-controls="dashboard-orders-list" aria-selected="${key===section}" data-order-section="${key}">${key[0].toUpperCase()+key.slice(1)} <span>0</span></button>`).join('');list.before(nav);list.setAttribute('role','tabpanel');
     const title=list.parentElement.querySelector('h3,h4');if(title)title.textContent='My orders';
     const subList=document.getElementById('dashboard-subscriptions-list'),subNav=document.createElement('div');subNav.className='fmv-order-sections fmv-subscription-sections';subNav.setAttribute('role','tablist');subNav.setAttribute('aria-label','Subscription sections');
     subNav.innerHTML=['active','paused','cancelled'].map(key=>`<button type="button" role="tab" aria-controls="dashboard-subscriptions-list" aria-selected="${key===subscriptionSection}" data-subscription-section="${key}">${key[0].toUpperCase()+key.slice(1)} <span>0</span></button>`).join('');subList.before(subNav);subList.setAttribute('role','tabpanel');
@@ -35,6 +57,20 @@
       if(button.dataset.customerAction==='rate')FMVWorkspace.form('Rate this delivery','<label>Rating<select name="stars"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Fair</option><option value="2">2 — Poor</option><option value="1">1 — Very poor</option></select></label><label>Feedback<textarea name="comment" maxlength="1000" rows="3"></textarea></label>',async form=>{await FMV.request('/orders/'+encodeURIComponent(button.dataset.orderId)+'/rating',{method:'POST',body:{stars:Number(form.elements.stars.value),comment:form.elements.comment.value.trim()}});FMV.notice('Delivery rating saved.');});
     });
   });
-  document.addEventListener('fmv:locked',()=>{orders=[];subscriptions=[];section='recent';subscriptionSection='active';});
-  window.FMVOrders={update,filter:items=>items.filter(o=>group(o)===section),actions,updateSubscriptions,filterSubscriptions:items=>items.filter(s=>s.status===subscriptionSection),get subscriptionSection(){return subscriptionSection;}};
+  document.addEventListener('fmv:locked',()=>{
+    orders=[];subscriptions=[];returnClaims=new Map();section='recent';subscriptionSection='active';
+    for(const button of document.querySelectorAll('[data-order-section]')){
+      button.setAttribute('aria-selected',String(button.dataset.orderSection==='recent'));
+      const count=button.querySelector('span');if(count)count.textContent='0';
+    }
+  });
+  window.FMVOrders={
+    update,updateReturns,
+    filter:items=>items.filter(o=>inSection(o,section)),
+    claimFor:order=>returnClaims.get(order.id)||null,
+    actions,updateSubscriptions,
+    filterSubscriptions:items=>items.filter(s=>s.status===subscriptionSection),
+    get section(){return section;},
+    get subscriptionSection(){return subscriptionSection;}
+  };
 })();
