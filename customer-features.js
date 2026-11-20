@@ -66,6 +66,38 @@
       catch(error){FMV.notice(error.message,true);}finally{button.disabled=false;}
     });
   }
+  // Open the pre-existing, server-validated return request form directly
+  // from a delivered order. Never create claims without an explicit submission.
+  async function openReturnForm(orderId){
+    if(!FMV.user)throw new Error('Sign in before requesting a return.');
+    if(!orders.some(order=>order.id===orderId)){
+      const rows=await api('/orders');
+      orders=Array.isArray(rows)?rows:[];
+    }
+    const order=orders.find(item=>item.id===orderId);
+    if(!order || order.status!=='Delivered')throw new Error('Returns can be requested only for your delivered orders.');
+    const active=returns.find(item=>item.order_id===orderId && !['rejected','cancelled'].includes(item.status));
+    if(active){
+      document.querySelector('[data-order-section="returned"]')?.click();
+      document.getElementById('dashboard-orders-list')?.scrollIntoView({block:'start',behavior:'smooth'});
+      FMV.notice('A return or refund request is already being processed for this order.');
+      return;
+    }
+    window.FMVExperience?.navigate('profile','orders');
+    const panel=$('fmv-returns-panel'),form=$('fmv-new-return');
+    if(!panel || !form)throw new Error('Return form is unavailable. Refresh the page and retry.');
+    // Use a freshly fetched order list when necessary; the backend enforces ownership,
+    // delivery status and duplicate claim validation again on submission.
+    const select=form.elements.order_id;
+    if(![...select.options].some(option=>option.value===orderId)){
+      const option=document.createElement('option');option.value=orderId;
+      option.textContent=order.order_number || orderId;select.append(option);
+    }
+    select.value=orderId;
+    form.elements.request_type.value='return';
+    panel.scrollIntoView({block:'start',behavior:'smooth'});
+    form.elements.reason.focus({preventScroll:true});
+  }
   function makeUPI(){
     const wallet=document.querySelector('[data-profile-area="wallet"]');if(!wallet)return;
     const section=document.createElement('section');section.id='fmv-upi-payment-panel';section.className='fmv-payment-panel';
@@ -144,6 +176,7 @@
       window.FMVOrders?.updateReturns(returns);}
     catch(error){if(force)FMV.notice(error.message,true);}
   }
+  window.FMVReturns={open:openReturnForm,refresh:()=>refresh(true)};
   document.addEventListener('DOMContentLoaded',()=>{makeHelp();makeReturns();makeUPI();});
   document.addEventListener('fmv:authenticated',()=>{FMV.guard(()=>refresh(true));});
   document.addEventListener('fmv:sync',()=>FMV.guard(()=>refresh()));
