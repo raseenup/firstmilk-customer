@@ -63,7 +63,14 @@
       const f=ev.currentTarget,button=f.querySelector('button');button.disabled=true;
       try{await api('/customer/returns',{method:'POST',body:{order_id:f.elements.order_id.value,
         request_type:f.elements.request_type.value,reason:f.elements.reason.value}});
-        f.reset();FMV.notice('Return/refund request submitted for review.');await refresh(true);}
+        f.reset();
+        // Refresh after the committed mutation; preserve successful return history
+        // even if a previous background read was already in progress.
+        if(refreshing)await refreshing;
+        lastRefresh=0;
+        await refresh(true);
+        document.querySelector('[data-order-section="returned"]')?.click();
+        FMV.notice('Return/refund request submitted for review. It is not automatically approved.');}
       catch(error){FMV.notice(error.message,true);}finally{button.disabled=false;}
     });
   }
