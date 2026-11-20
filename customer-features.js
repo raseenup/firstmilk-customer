@@ -4,7 +4,8 @@
   const $=id=>document.getElementById(id);
   const esc=s=>FMV.escape(s);
   const api=(path,options)=>FMV.request(path,options);
-  let lastRefresh=0,returns=[],orders=[],transfers=[],settings={enabled:false},pendingIntent=null;
+  let lastRefresh=0,lastWalletRefresh=0,refreshing=null,walletRefreshing=null;
+  let returns=[],orders=[],transfers=[],settings={enabled:false},pendingIntent=null;
   function makeHelp(){
     const profile=$('fmv-profile-area');if(!profile)return;
     // The assistant is a dedicated Profile screen, never a floating button.
@@ -154,6 +155,10 @@
     select.innerHTML='<option value="">Select a delivered order</option>'+delivered.filter(o=>!claimsByOrder.has(o.id) ||
       claimsByOrder.get(o.id).status==='rejected').map(o=>`<option value="${esc(o.id)}">${esc(o.id)}</option>`).join('');
     if([...select.options].some(o=>o.value===selected))select.value=selected;
+    renderWallet();
+  }
+  function renderWallet(){
+    if(!$('fmv-upi-receiver') || !$('fmv-upi-create') || !$('fmv-upi-history'))return;
     $('fmv-upi-receiver').textContent=settings.enabled?
       'Receiving account: '+settings.payee_name+' · '+settings.upi_id:
       'UPI is not enabled by the company. Choose an available checkout method.';
@@ -164,23 +169,68 @@
       ${p.customer_reference?`<small>Reported: ${esc(p.customer_reference)}</small>`:''}
       </article>`).join('') || '<p>No UPI transfers yet.</p>';
   }
-  async function refresh(force=false){
-    if(!FMV.user)return;
-    if(!force && Date.now()-lastRefresh<20000)return;lastRefresh=Date.now();
-    try{const [r,o,p]=await Promise.all([api('/customer/returns'),api('/orders'),api('/customer/payment/upi')]);
-      returns=Array.isArray(r.claims)?r.claims:[];orders=Array.isArray(o)?o:[];
-      settings=p.settings || {};transfers=Array.isArray(p.transfers)?p.transfers:[];
-      render();
-      // Share the same owner-scoped return claims with the primary order tabs.
-      // Counts and Returned cards reflect admin updates without a new backend schema.
-      window.FMVOrders?.updateReturns(returns);}
-    catch(error){if(force)FMV.notice(error.message,true);}
+  function refreshWallet(force=false){
+    if(!FMV.user)return Promise.resolve();
+    if(walletRefreshing)return walletRefreshing;
+    if(!force && Date.now()-lastWalletRefresh<60000)return Promise.resolve();
+    const owner=FMV.user.id;
+    walletRefreshing=(async()=>{
+      try{
+        const result=await api('/customer/payment/upi');
+        if(FMV.user?.id!==owner)return;
+        settings=result.settings || {enabled:false};
+        transfers=Array.isArray(result.transfers)?result.transfers:[];
+        lastWalletRefresh=Date.now();
+        renderWallet();
+      }catch(error){
+        // UPI balance/merchant availability is nonessential for order history.
+        // Keep its existing disabled UI instead of delaying returns or orders.
+        if(force && FMV.user?.id===owner)FMV.notice('UPI details are temporarily unavailable.',true);
+      }
+    })().finally(()=>{walletRefreshing=null;});
+    return walletRefreshing;
+  }
+  function refresh(force=false){
+    if(!FMV.user)return Promise.resolve();
+    if(refreshing)return refreshing;
+    if(!force && Date.now()-lastRefresh<20000)return Promise.resolve();
+    const owner=FMV.user.id;
+    // Use two essential concurrent reads so a slow payment service never
+    // blocks order/return processing. FMV.request deduplicates concurrent GETs.
+    refreshing=(async()=>{
+      try{
+        const [claimsResult,orderRows]=await Promise.all([
+          api('/customer/returns'),api('/orders')
+        ]);
+        if(FMV.user?.id!==owner)return;
+        returns=Array.isArray(claimsResult.claims)?claimsResult.claims:[];
+        orders=Array.isArray(orderRows)?orderRows:[];
+        lastRefresh=Date.now();
+        render();
+        window.FMVOrders?.updateReturns(returns);
+      }catch(error){
+        if(force && FMV.user?.id===owner)FMV.notice(error.message,true);
+      }
+    })().finally(()=>{refreshing=null;});
+    void refreshWallet();
+    return refreshing;
   }
   window.FMVReturns={open:openReturnForm,refresh:()=>refresh(true)};
-  document.addEventListener('DOMContentLoaded',()=>{makeHelp();makeReturns();makeUPI();});
+  document.addEventListener('DOMContentLoaded',()=>{
+    makeHelp();makeReturns();makeUPI();
+    // Fetch receiving UPI details on demand if wallet is opened.
+    document.addEventListener('click',event=>{
+      if(event.target.closest('[data-fmv-action="wallet"]'))void refreshWallet(true);
+    });
+  });
   document.addEventListener('fmv:authenticated',()=>{FMV.guard(()=>refresh(true));});
   document.addEventListener('fmv:sync',()=>FMV.guard(()=>refresh()));
   document.addEventListener('fmv:locked',()=>{if($('fmv-customer-assistant'))$('fmv-customer-assistant').hidden=true;
-    if($('fmv-customer-chat-feed'))$('fmv-customer-chat-feed').replaceChildren();lastRefresh=0;transfers=[];returns=[];orders=[];
-    window.FMVOrders?.updateReturns([]);});
+    if($('fmv-customer-chat-feed'))$('fmv-customer-chat-feed').replaceChildren();
+    lastRefresh=0;lastWalletRefresh=0;returns=[];orders=[];transfers=[];settings={enabled:false};
+    // Clear customer-visible data immediately, even if old requests resolve later.
+    window.FMVOrders?.updateReturns([]);
+    if($('fmv-upi-history'))$('fmv-upi-history').replaceChildren();
+    if($('fmv-returned-orders'))$('fmv-returned-orders').replaceChildren();
+  });
 })();
