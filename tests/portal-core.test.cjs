@@ -112,6 +112,8 @@ test('sign-out revokes the token and restores only explicitly remembered identif
   assert.equal(w.sessionStorage.getItem('fmv_session_customer'),null);
   assert.equal(w.localStorage.getItem('customer_token'),null);
   assert.equal(w.localStorage.getItem(key),email);
+  assert.doesNotMatch(w.document.getElementById('fmv-auth-message').textContent,
+    /server could not confirm revocation/i);
   assert.ok([...Array(w.localStorage.length)].every((_,i)=>
     !String(w.localStorage.getItem(w.localStorage.key(i))||'').includes(password)));
 });
@@ -140,4 +142,16 @@ test('email/mobile memory is an explicit opt-in and may be disabled',async t=>{
   checkbox.checked=false;
   checkbox.dispatchEvent(new w.Event('change',{bubbles:true}));
   assert.equal(w.localStorage.getItem(key),null);
+});
+
+test('network failure leaves account signed out while reporting unverified server revocation',async t=>{
+  const {w,setResponder}=await harness(t);
+  setResponder(async url=>{
+    if(url.endsWith('/auth/logout'))throw new Error('offline');
+    return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}});
+  });
+  await w.FMV.logout();
+  assert.equal(w.FMV.user,null);
+  assert.equal(w.sessionStorage.getItem('fmv_session_customer'),null);
+  assert.match(w.document.getElementById('fmv-auth-message').textContent,/Server revocation could not be confirmed/);
 });
