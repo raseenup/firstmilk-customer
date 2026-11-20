@@ -1136,7 +1136,13 @@ function checkUserSession(){
   const loc=document.getElementById('user-location-label');if(loc)loc.textContent=u.address || 'Add your delivery address';
   closeAuthModal();
 }
-function handleSignOut(){cart=[];fmvOrders=[];return FMV.logout();}
+function handleSignOut(){
+  // An explicit logout must never leave a previous customer's basket on this device.
+  const signedInUserId=FMV.user?.id;
+  if(signedInUserId)try{sessionStorage.removeItem('fmv_cart_'+signedInUserId);}catch(error){}
+  cart=[];fmvOrders=[];fmvCheckoutKey=null;
+  return FMV.logout();
+}
 async function loadProducts(supplied){if(!FMV.user)return;return FMV.guard(async()=>{
   try{productsCatalog=Array.isArray(supplied)?supplied:await FMV.request('/products');renderProducts();}
   catch(error){FMV.setHTML('product-grid',customerEmpty('The catalog could not be loaded','Please check your connection and try again.')+'<button class="fmv-btn customer-catalog-retry" onclick="loadProducts()">Try loading again</button>');throw error;}

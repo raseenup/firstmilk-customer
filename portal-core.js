@@ -9,6 +9,38 @@
   let user = null, revision = null, syncTimer = null, challenge = null, authMode = 'signin', lastActivity = Date.now(), authBusy = false;
   const tokenKey = () => 'fmv_session_' + portal();
   const token = () => sessionStorage.getItem(tokenKey()) || '';
+  // Optional identification convenience only. No passwords, OTPs or tokens in
+  // localStorage, and no implicit sign-in after a deliberate sign-out.
+  const REMEMBER_IDENTIFIER_KEY='fmv_remember_identifier_customer_v1';
+  function rememberedIdentifier(){
+    if(portal()!=='customer')return '';
+    try{
+      const identifier=localStorage.getItem(REMEMBER_IDENTIFIER_KEY) || '';
+      return identifier.length<=254?identifier:'';
+    }catch(error){return '';}
+  }
+  function fillRememberedIdentifier(){
+    if(portal()!=='customer')return;
+    const input=document.getElementById('fmv-auth-identifier');
+    const checkbox=document.getElementById('fmv-remember-identifier');
+    if(!input || !checkbox)return;
+    const saved=rememberedIdentifier();
+    checkbox.checked=!!saved;
+    if(authMode==='signin' && !challenge && saved)input.value=saved;
+  }
+  function persistRememberedIdentifier(){
+    if(portal()!=='customer')return;
+    const checkbox=document.getElementById('fmv-remember-identifier');
+    if(!checkbox)return;
+    try{
+      if(checkbox.checked){
+        const identifier=val('fmv-auth-identifier');
+        if(identifier && identifier.length<=254)localStorage.setItem(REMEMBER_IDENTIFIER_KEY,identifier);
+      }else{
+        localStorage.removeItem(REMEMBER_IDENTIFIER_KEY);
+      }
+    }catch(error){/* Storage may be blocked: sign-in still works. */}
+  }
   const pendingKey = () => 'fmv_pending_auth_' + portal();
   let pending = null, challengeClock = null, challengeTimer = null, resendBusy = false, expiredNotice = false;
   let authGeneration = 0, restoreBusy = false, hiddenAt = null;
@@ -213,7 +245,7 @@
   }
   function setMode(mode){authGeneration++;authMode=mode;clearChallenge();document.getElementById('fmv-auth-form').reset();
     for(const id of ['fmv-auth-password','fmv-auth-invitation'])document.getElementById(id)?.dispatchEvent(new Event('fmv:hide-password'));
-    authFieldsVisible(true);renderAuth();}
+    authFieldsVisible(true);renderAuth();fillRememberedIdentifier();}
   function renderAuth(){
     const signup=authMode==='signup';
     hideExistingAccount();
@@ -236,6 +268,8 @@
     document.getElementById('fmv-auth-invitation').required=portal()==='admin' && signup && !challenge;
     document.getElementById('fmv-admin-invitation-help').hidden=portal()!=='admin' || !!challenge;
     const input=document.getElementById('fmv-auth-identifier');input.type=signup?'email':'text';input.placeholder=signup?'you@example.com':'Email or Indian mobile number';
+    const rememberRow=document.getElementById('fmv-remember-identifier-row');
+    if(rememberRow)rememberRow.hidden=portal()!=='customer' || signup || !!challenge;
     const passwordInput=document.getElementById('fmv-auth-password');
     passwordInput.autocomplete=signup?'new-password':'current-password';
     passwordInput.setCustomValidity('');
@@ -268,6 +302,8 @@
         const body=signup?{email:val('fmv-auth-identifier'),password:document.getElementById('fmv-auth-password').value,full_name:val('fmv-auth-name'),phone:val('fmv-auth-phone'),address:val('fmv-auth-address'),invitation:val('fmv-auth-invitation'),portal:portal()}:{identifier:val('fmv-auth-identifier'),password:document.getElementById('fmv-auth-password').value,portal:portal()};
         const result=await request('/auth/'+(signup?'signup':'signin'),{method:'POST',body});
         if(generation!==authGeneration)return;
+        // Remember only the user-entered identifier if they explicitly opted in.
+        if(!signup)persistRememberedIdentifier();
         document.getElementById('fmv-auth-password').value='';useChallenge(result);document.getElementById('fmv-auth-otp').focus();
       }
     }catch(e){if(generation===authGeneration){if(!challenge && authMode==='signup' && e.status===409)showExistingAccount(e.message);else gateMessage(e.message,true);}}finally{authBusy=false;btn.disabled=false;updateChallengeClock();}
@@ -277,7 +313,15 @@
     document.documentElement.classList.add('fmv-locked');
     document.getElementById('fmv-auth-gate')?.removeAttribute('hidden');
     if(document.getElementById('fmv-session-bar'))document.getElementById('fmv-session-bar').hidden=true;
-    if(document.getElementById('fmv-auth-form')){authMode='signin';document.getElementById('fmv-auth-form').reset();authFieldsVisible(true);renderAuth();}
+    if(portal()==='customer'){
+      // Clear legacy authentication artefacts from the retired customer UI.
+      // Preserve only the opt-in, non-secret identifier.
+      try{
+        for(const key of ['customer_token','customer_email','customer_phone',
+                          'customer_name','customer_address'])localStorage.removeItem(key);
+      }catch(error){}
+    }
+    if(document.getElementById('fmv-auth-form')){authMode='signin';document.getElementById('fmv-auth-form').reset();authFieldsVisible(true);renderAuth();fillRememberedIdentifier();}
     document.dispatchEvent(new CustomEvent('fmv:locked'));
   }
   function unlock(){
@@ -450,6 +494,24 @@
     gate.querySelector('#fmv-auth-fields').hidden=!!token();
     gate.querySelector('#fmv-session-check').hidden=!token();
     document.body.prepend(gate);
+    if(portal()==='customer'){
+      const identifier=document.getElementById('fmv-auth-identifier');
+      const row=document.createElement('label');
+      row.id='fmv-remember-identifier-row';
+      row.className='fmv-remember-identifier';
+      const box=document.createElement('input');box.type='checkbox';box.id='fmv-remember-identifier';
+      const label=document.createElement('span');
+      label.textContent='Remember my email or mobile on this device (not my password)';
+      row.append(box,label);
+      identifier.closest('label').after(row);
+      const help=document.createElement('small');help.className='fmv-remember-identifier-help';
+      help.textContent='Avoid enabling this on shared devices. Signing out still revokes your session and requires password and email OTP next time.';
+      row.after(help);
+      row.addEventListener('change',()=>{
+        if(!box.checked)try{localStorage.removeItem(REMEMBER_IDENTIFIER_KEY);}catch(error){}
+      });
+      fillRememberedIdentifier();
+    }
     for(const id of ['fmv-auth-password','fmv-auth-invitation'])attachPasswordVisibility(document.getElementById(id));
     const bar=document.createElement('div');bar.id='fmv-session-bar';bar.hidden=true;bar.innerHTML='<span id="fmv-session-name"></span><button type="button" id="fmv-logout">Sign out</button>';document.body.append(bar);
     document.getElementById('fmv-logout').addEventListener('click',logout);

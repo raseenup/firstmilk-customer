@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const e=value=>FMV.escape(value);
-  let section='recent',orders=[],subscriptionSection='active',subscriptions=[],returnClaims=new Map();
+  let section='recent',orders=[],subscriptionSection='active',subscriptions=[],returnClaims=new Map(),claimSignature='';
   const group=order=>order.status==='Delivered'?'delivered':order.status==='Cancelled'?'cancelled':'recent';
   // Orders can be delivered AND later involved in a return. Keep the original
   // Recent/Delivered/Cancelled filters intact while adding a history view.
@@ -16,6 +16,11 @@
     }
   }
   function updateReturns(claims){
+    const incoming=Array.isArray(claims)?claims:[];
+    // Skip costly re-rendering when a background sync has no new claim state.
+    const signature=JSON.stringify(incoming.map(item=>[item?.id,item?.order_id,item?.status,item?.refund_reference,item?.updated_at]));
+    if(signature===claimSignature)return;
+    claimSignature=signature;
     const next=new Map();
     for(const claim of Array.isArray(claims)?claims:[]){
       if(!claim || typeof claim.order_id!=='string' || !claim.order_id)continue;
@@ -24,12 +29,18 @@
     }
     returnClaims=next;
     update(orders);
-    if(section==='returned' && FMV.user)loadDashboardStatus({orders,subscriptions});
+    if((section==='returned' || section==='delivered') && FMV.user)loadDashboardStatus({orders,subscriptions});
   }
   function updateSubscriptions(items){subscriptions=items;for(const button of document.querySelectorAll('[data-subscription-section]')){const key=button.dataset.subscriptionSection;button.setAttribute('aria-selected',String(subscriptionSection===key));button.querySelector('span').textContent=items.filter(s=>s.status===key).length;}}
   function actions(order){
     const unread=FMVWorkspace.snapshot?.chat_unread?.[order.id] || 0;
-    return `<button type="button" class="fmv-btn secondary" data-workspace-action="chat" data-order-id="${e(order.id)}">Order chat${unread?' ('+Number(unread)+')':''}</button>${order.status==='Delivered'?`<button type="button" class="fmv-btn secondary" data-customer-action="rate" data-order-id="${e(order.id)}">Rate delivery</button>`:''}`;
+    const claim=returnClaims.get(order.id);
+    const hasActiveReturn=claim && !['rejected','cancelled'].includes(String(claim.status));
+    const returnAction=hasActiveReturn?'view-return':'request-return';
+    const returnLabel=hasActiveReturn?'Return status':'Request return';
+    const deliveredActions=order.status==='Delivered'?
+      `<button type="button" class="fmv-btn secondary" data-customer-action="${returnAction}" data-order-id="${e(order.id)}">${returnLabel}</button><button type="button" class="fmv-btn secondary" data-customer-action="rate" data-order-id="${e(order.id)}">Rate delivery</button>`:'';
+    return `<button type="button" class="fmv-btn secondary" data-workspace-action="chat" data-order-id="${e(order.id)}">Order chat${unread?' ('+Number(unread)+')':''}</button>${deliveredActions}`;
   }
   function pinAddress(id){
     const item=FMVWorkspace.snapshot?.addresses?.find(a=>a.id===id) || {};
@@ -53,12 +64,22 @@
       const tab=event.target.closest('[data-order-section]');if(tab){section=tab.dataset.orderSection;loadDashboardStatus({orders,subscriptions:fmvSubscriptions});return;}
       const subTab=event.target.closest('[data-subscription-section]');if(subTab){subscriptionSection=subTab.dataset.subscriptionSection;loadDashboardStatus({orders,subscriptions});return;}
       const button=event.target.closest('[data-customer-action]');if(!button)return;
+      if(button.dataset.customerAction==='request-return'){
+        FMV.guard(()=>window.FMVReturns?.open(button.dataset.orderId));
+        return;
+      }
+      if(button.dataset.customerAction==='view-return'){
+        const returned=document.querySelector('[data-order-section="returned"]');
+        returned?.click();
+        document.getElementById('dashboard-orders-list')?.scrollIntoView({block:'start',behavior:'smooth'});
+        return;
+      }
       if(button.dataset.customerAction==='pin-address'){pinAddress(button.dataset.id);return;}
       if(button.dataset.customerAction==='rate')FMVWorkspace.form('Rate this delivery','<label>Rating<select name="stars"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Fair</option><option value="2">2 — Poor</option><option value="1">1 — Very poor</option></select></label><label>Feedback<textarea name="comment" maxlength="1000" rows="3"></textarea></label>',async form=>{await FMV.request('/orders/'+encodeURIComponent(button.dataset.orderId)+'/rating',{method:'POST',body:{stars:Number(form.elements.stars.value),comment:form.elements.comment.value.trim()}});FMV.notice('Delivery rating saved.');});
     });
   });
   document.addEventListener('fmv:locked',()=>{
-    orders=[];subscriptions=[];returnClaims=new Map();section='recent';subscriptionSection='active';
+    orders=[];subscriptions=[];returnClaims=new Map();claimSignature='';section='recent';subscriptionSection='active';
     for(const button of document.querySelectorAll('[data-order-section]')){
       button.setAttribute('aria-selected',String(button.dataset.orderSection==='recent'));
       const count=button.querySelector('span');if(count)count.textContent='0';

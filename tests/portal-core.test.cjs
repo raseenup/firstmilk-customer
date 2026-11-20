@@ -93,3 +93,51 @@ test('polling pauses offline, resumes immediately, backs off on errors and locks
   setResponder(async()=>json({detail:'Session expired'},401));await run(30000);
   assert.equal(w.FMV.user,null);assert.equal(w.FMV.token,'');assert.ok(w.document.documentElement.classList.contains('fmv-locked'));
 });
+
+
+test('sign-out revokes the token and restores only explicitly remembered identifier',async t=>{
+  const {w}=await harness(t);
+  const key='fmv_remember_identifier_customer_v1';
+  const email='repeat.customer@example.com';
+  const password='DontStoreThis9!';
+  w.localStorage.setItem(key,email);
+  w.localStorage.setItem('customer_token','obsolete-legacy-token');
+  w.document.getElementById('fmv-auth-password').value=password;
+  await w.FMV.logout();
+  const input=w.document.getElementById('fmv-auth-identifier');
+  const remember=w.document.getElementById('fmv-remember-identifier');
+  assert.equal(input.value,email);
+  assert.equal(remember.checked,true);
+  assert.equal(w.document.getElementById('fmv-auth-password').value,'');
+  assert.equal(w.sessionStorage.getItem('fmv_session_customer'),null);
+  assert.equal(w.localStorage.getItem('customer_token'),null);
+  assert.equal(w.localStorage.getItem(key),email);
+  assert.ok([...Array(w.localStorage.length)].every((_,i)=>
+    !String(w.localStorage.getItem(w.localStorage.key(i))||'').includes(password)));
+});
+
+test('email/mobile memory is an explicit opt-in and may be disabled',async t=>{
+  const {w,setResponder,json}=await harness(t);
+  const key='fmv_remember_identifier_customer_v1';
+  w.FMV.showAuth('signin');
+  const checkbox=w.document.getElementById('fmv-remember-identifier');
+  assert.equal(checkbox.checked,false);
+  const input=w.document.getElementById('fmv-auth-identifier');
+  input.value='sample@example.com';
+  const password=w.document.getElementById('fmv-auth-password');
+  password.value='Password123!';
+  checkbox.checked=true;
+  setResponder(async url=>json(url.endsWith('/auth/signin')?
+    {challenge_id:'trial',server_time:1000,resend_available_at:1000,expires_at:1300}:{}));
+  w.document.getElementById('fmv-auth-form').dispatchEvent(
+    new w.Event('submit',{cancelable:true,bubbles:true}));
+  await settle();
+  assert.equal(w.localStorage.getItem(key),'sample@example.com');
+  assert.equal(password.value,'');
+  assert.ok(![...Array(w.localStorage.length)].some((_,i)=>
+    String(w.localStorage.getItem(w.localStorage.key(i))||'').includes('Password123!')));
+  // Clearing the opt-in must also clear the saved identifier immediately.
+  checkbox.checked=false;
+  checkbox.dispatchEvent(new w.Event('change',{bubbles:true}));
+  assert.equal(w.localStorage.getItem(key),null);
+});
