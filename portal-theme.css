@@ -196,10 +196,17 @@ body[data-portal="customer"] #fmv-notice{bottom:110px;border-radius:14px;font-si
 
 /* Premium company-branded product images. Existing stock/price/order behavior unchanged. */
 .customer-product-visual{isolation:isolate;overflow:hidden;background:linear-gradient(145deg,#eff9f3,#e4f0ff 56%,#fff5df)}
-.customer-product-visual .customer-product-image{object-fit:cover!important;padding:0!important;background:transparent!important;transition:transform .55s ease;transform-origin:center}
-.customer-product-card:hover .customer-product-image{transform:scale(1.04)}
+.customer-product-visual .customer-product-image{object-fit:contain!important;object-position:center!important;padding:32px 13px 36px!important;background:transparent!important;box-sizing:border-box;transition:none!important;transform:none!important}
+.customer-product-card:hover .customer-product-image{transform:none!important}
 .customer-product-visual .fmv-product-logo-overlay{position:absolute!important;z-index:8;left:9px;bottom:10px;width:56px;height:42px;object-fit:contain;background:rgba(255,255,255,.93);border:1px solid rgba(17,101,79,.08);border-radius:10px;padding:3px;box-shadow:0 4px 14px rgba(8,54,52,.14);pointer-events:none}
 .customer-product-visual :is(.customer-unit,.customer-product-stock){z-index:9}
 @media(prefers-reduced-motion:reduce){.customer-product-visual .customer-product-image{transition:none!important;transform:none!important}}
 .fmv-campaign video,.fmv-banner-track video{pointer-events:none;user-select:none;-webkit-user-select:none}
 .fmv-campaign video::-webkit-media-controls,.fmv-banner-track video::-webkit-media-controls{display:none!important}
+
+/* Catalog product photography: reveal the entire original image at all widths. */
+.customer-product-card .customer-product-visual{height:auto!important;min-height:0!important;aspect-ratio:1/1;max-height:none;overflow:hidden;}
+.customer-product-card .customer-product-visual .customer-product-image{display:block;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;}
+.customer-product-card .customer-product-visual .fmv-product-logo-overlay{width:44px;height:34px;left:10px;top:9px;bottom:auto;}
+.customer-product-card .customer-product-visual :is(.customer-unit,.customer-product-stock){z-index:9;}
+@media(max-width:440px){.customer-product-card .customer-product-visual{height:auto!important;aspect-ratio:1/1;}}
