@@ -1173,6 +1173,7 @@ function renderProducts(){
     </div>
     <h4>${e(p.name)}</h4>
     <p class="customer-product-description">${e(p.description)}</p>
+    <button type="button" class="fmv-open-product-info" data-product-information="${e(p.id)}" aria-label="View details for ${e(p.name)}">View full product details <span aria-hidden="true">›</span></button>
     <div class="fmv-buy-panel">
       <div class="fmv-buy-top">
         <div class="fmv-buy-price"><strong>${FMV.money(p.price)}</strong><span>per ${e(p.unit)}${p.tax_rate?'<br>+ '+Number(p.tax_rate)+'% GST':''}</span></div>
