@@ -26,3 +26,70 @@
 [data-theme="dark"] .customer-header .customer-brand-mark,
 [data-theme="dark"] .admin-header .admin-brand-mark,
 [data-theme="dark"] .driver-topbar .driver-brand-mark{background:#f6fff7!important}
+
+/* Catalog image hotfix v3: make the actual media determine the visual height.
+   Product uploads are square; using normal-flow images avoids cropped banners
+   caused by absolute positioning and earlier fixed-height CSS rules. */
+body[data-portal="customer"] #product-grid .customer-product-card .customer-product-visual{
+  display:block!important;
+  position:relative!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  aspect-ratio:1 / 1!important;
+  overflow:hidden;
+  border-radius:16px;
+  background:#f6faf4;
+}
+body[data-portal="customer"] #product-grid .customer-product-card .customer-product-visual > img.customer-product-image{
+  display:block!important;
+  position:relative!important;
+  inset:auto!important;
+  width:100%!important;
+  max-width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  aspect-ratio:auto!important;
+  padding:0!important;
+  margin:0!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  transform:none!important;
+  filter:none!important;
+}
+body[data-portal="customer"] #product-grid .customer-product-card .customer-product-visual > img.customer-product-image[hidden]{
+  display:none!important;
+}
+body[data-portal="customer"] #product-grid .customer-product-card .customer-product-visual > .customer-product-illustration{
+  position:absolute!important;
+  inset:0!important;
+  margin:auto!important;
+  pointer-events:none;
+}
+body[data-portal="customer"] #product-grid .customer-product-card .customer-product-visual > .customer-product-illustration[hidden]{
+  display:none!important;
+}
+body[data-portal="customer"] #product-grid .customer-product-card .customer-product-visual > .fmv-product-logo-overlay{
+  position:absolute!important;
+  left:9px!important;
+  top:9px!important;
+  bottom:auto!important;
+  width:43px!important;
+  height:33px!important;
+  object-fit:contain!important;
+  pointer-events:none;
+}
+body[data-portal="customer"] #product-grid .customer-product-card .customer-product-visual > .customer-view-image{
+  position:absolute!important;
+  z-index:12!important;
+  right:9px!important;
+  bottom:9px!important;
+}
+@media(max-width:540px){
+  body[data-portal="customer"] #product-grid .customer-product-card .customer-product-visual{
+    aspect-ratio:1 / 1!important;
+    height:auto!important;
+  }
+}
