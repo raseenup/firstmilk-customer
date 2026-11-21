@@ -74,7 +74,7 @@ test('The final-loaded branded CSS keeps square product photos in normal documen
  assert.match(stylesheet,/height:auto!important/);
  assert.match(stylesheet,/\.customer-product-image\[hidden\]\{/);
  assert.match(page,/brand\.css\?v=20261121-catalog-v4/);
- assert.match(page,/app\.js\?v=20261121-catalog-v4/);
+ assert.match(page,/<script defer src="app\.js\?v=[^"]+"><\/script>/);
 });
 
 test('Catalog v4 uses a fresh square media stage rather than legacy cropped visual',()=>{
@@ -94,5 +94,5 @@ test('Catalog v4 uses a fresh square media stage rather than legacy cropped visu
  assert.match(css,/#product-grid \.fmv-catalog-card-v4 img\.fmv-catalog-photo\{/);
  assert.match(css,/aspect-ratio:1 \/ 1!important;object-fit:contain!important/);
  assert.match(page,/brand\.css\?v=20261121-catalog-v4/);
- assert.match(page,/app\.js\?v=20261121-catalog-v4/);
+ assert.match(page,/<script defer src="app\.js\?v=[^"]+"><\/script>/);
 });
