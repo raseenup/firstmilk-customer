@@ -1124,7 +1124,15 @@ function customerProductIllustration(product){
 function customerProductVisual(product){
   let image='';
   try{if(typeof product.image_url==='string' && product.image_url.trim()){const url=new URL(product.image_url,product.image_url.startsWith('/media/products/')?FMV.apiBase+'/':location.origin);if((url.protocol==='https:' || url.origin===location.origin) && !url.username && !url.password)image=url.href;}}catch(error){}
-  return customerProductIllustration(product)+(image?`<img class="customer-product-image" src="${FMV.escape(image)}" alt="${FMV.escape(product.name)}" loading="lazy" referrerpolicy="no-referrer">`:'');
+  // Product-specific brand artwork is the local fallback; original admin uploads win.
+  if(!image){
+    const n=String(product.name||'').toLowerCase();
+    const type=/ghee/.test(n)?'ghee':/curd|yogurt|yoghurt/.test(n)?'curd':/butter/.test(n)?'butter':/paneer|cheese/.test(n)?'paneer':'milk';
+    image='assets/products/fmv-'+type+'.svg';
+  }
+  const photo=`<img class="customer-product-image" src="${FMV.escape(image)}" alt="${FMV.escape(product.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
+  const badge='<img class="fmv-product-logo-overlay" src="assets/brand/fmv-logo.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">';
+  return customerProductIllustration(product)+photo+badge;
 }
 function customerPaymentLabel(value){const labels={cod_due:'Cash on delivery',pending:'Payment pending',unpaid:'Payment pending',paid:'Paid'};return labels[String(value).toLowerCase()] || String(value || '');}
 function customerStatusTone(value){return /^(delivered|paid|active|approved|resolved|completed)$/i.test(String(value))?'success':/cancel|fail|reject|overdue/i.test(String(value))?'danger':'';}

@@ -193,3 +193,13 @@ body[data-portal="customer"] #fmv-notice{bottom:110px;border-radius:14px;font-si
 .customer-inline-arrow{display:inline-block;width:15px;height:15px;min-width:15px;vertical-align:middle;flex-shrink:0}
 @media(max-width:760px){.customer-hero{padding:24px 25px}.customer-hero h2{margin:10px 0 12px;font-size:38px}.customer-hero-copy>p{font-size:13px;line-height:1.6}.customer-hero-actions{margin-top:18px}.customer-hero-tags{margin-top:16px;gap:10px}.customer-hero-art{height:120px;min-height:120px;margin-top:0}.customer-hero-art>svg{height:135px;width:160px}.customer-art-orbit{width:115px;height:115px}.customer-art-caption{font-size:8px;right:3px;bottom:8px}}
 @media(max-width:440px){.customer-hero{padding:23px}.customer-hero h2{font-size:36px}.customer-hero-art{height:115px;min-height:115px}.customer-hero-art>svg{height:130px}.customer-hero-tags{font-size:8px;letter-spacing:0}}
+
+/* Premium company-branded product images. Existing stock/price/order behavior unchanged. */
+.customer-product-visual{isolation:isolate;overflow:hidden;background:linear-gradient(145deg,#eff9f3,#e4f0ff 56%,#fff5df)}
+.customer-product-visual .customer-product-image{object-fit:cover!important;padding:0!important;background:transparent!important;transition:transform .55s ease;transform-origin:center}
+.customer-product-card:hover .customer-product-image{transform:scale(1.04)}
+.customer-product-visual .fmv-product-logo-overlay{position:absolute!important;z-index:8;left:9px;bottom:10px;width:56px;height:42px;object-fit:contain;background:rgba(255,255,255,.93);border:1px solid rgba(17,101,79,.08);border-radius:10px;padding:3px;box-shadow:0 4px 14px rgba(8,54,52,.14);pointer-events:none}
+.customer-product-visual :is(.customer-unit,.customer-product-stock){z-index:9}
+@media(prefers-reduced-motion:reduce){.customer-product-visual .customer-product-image{transition:none!important;transform:none!important}}
+.fmv-campaign video,.fmv-banner-track video{pointer-events:none;user-select:none;-webkit-user-select:none}
+.fmv-campaign video::-webkit-media-controls,.fmv-banner-track video::-webkit-media-controls{display:none!important}
