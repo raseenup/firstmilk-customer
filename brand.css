@@ -163,7 +163,7 @@ body[data-portal="customer"] .fmv-buy-top .customer-quantity button{
 body[data-portal="customer"] .fmv-buy-top .customer-quantity span{
   min-width:17px;font-size:15px;font-weight:800;
 }
-body[data-portal="customer"] .fmv-buy-actions{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:9px;align-items:stretch;min-width:0}
+body[data-portal="customer"] .fmv-buy-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:9px;align-items:stretch;min-width:0}
 body[data-portal="customer"] .fmv-buy-actions :is(.customer-add-button,.customer-subscribe-button){
   display:flex;align-items:center;justify-content:center;gap:5px;
   width:100%;min-width:0;min-height:48px;margin:0!important;padding:10px 7px;
