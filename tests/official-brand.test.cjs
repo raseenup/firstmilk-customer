@@ -52,3 +52,14 @@ if(fs.existsSync(p.join(root,'website','index.html'))){
    assert.ok(read('website/assets/brand/fmv-social-preview.png').length>100);
  });
 }
+
+test('Customer catalog displays uncropped branded images with a full-image preview',()=>{
+ const css=html('portal-theme.css'),app=html('app.js'),page=html('index.html');
+ assert.match(css,/\.customer-product-card \.customer-product-visual\{height:auto!important/);
+ assert.match(css,/object-fit:contain!important/);
+ assert.match(css,/\.fmv-product-full-image img\{[^}]*object-fit:contain/);
+ assert.match(app,/data-fmv-image-zoom/);
+ assert.match(app,/dialog\.showModal\(\)/);
+ assert.match(page,/portal-theme\.css\?v=20261121-full-image/);
+ assert.doesNotMatch(css,/\.customer-product-card:hover \.customer-product-image\{transform:scale/);
+});

@@ -1157,7 +1157,7 @@ async function loadProducts(supplied){if(!FMV.user)return;return FMV.guard(async
 });}
 function renderProducts(){
   const e=FMV.escape;
-  FMV.setHTML('product-grid',productsCatalog.map((p,index)=>`<article class="customer-product-card" data-tone="${index%3}"><div class="customer-product-visual" aria-hidden="true">${customerProductVisual(p)}<span class="customer-unit">${e(p.unit)}</span><span class="customer-product-stock ${p.stock_quantity>0?'':'is-out'}">${p.stock_quantity>0?'In stock':'Out of stock'}</span></div><h4>${e(p.name)}</h4><p class="customer-product-description">${e(p.description)}</p><div class="customer-product-price"><strong>${FMV.money(p.price)}</strong><span>per ${e(p.unit)}${p.tax_rate?'<br>+ '+Number(p.tax_rate)+'% GST':''}</span></div><div class="customer-product-actions"><div class="customer-quantity" aria-label="Quantity for ${e(p.name)}"><button aria-label="Decrease ${e(p.name)} quantity" onclick="adjustQty('${e(p.id)}',-1)">−</button><span id="qty-${e(p.id)}" aria-live="polite">1</span><button aria-label="Increase ${e(p.name)} quantity" onclick="adjustQty('${e(p.id)}',1)">+</button></div><button class="customer-add-button" ${p.stock_quantity<=0?'disabled':''} onclick="addToCart('${e(p.id)}')">Add to cart <span aria-hidden="true">+</span></button></div><button class="customer-subscribe-button" onclick="subscribeProduct('${e(p.id)}')">Make it a subscription ${customerArrowIcon()}</button></article>`).join('') || customerEmpty('A fresh selection is on its way','No products are currently available. Please check back later.'));
+  FMV.setHTML('product-grid',productsCatalog.map((p,index)=>`<article class="customer-product-card" data-tone="${index%3}"><div class="customer-product-visual">${customerProductVisual(p)}<span class="customer-unit">${e(p.unit)}</span><span class="customer-product-stock ${p.stock_quantity>0?'':'is-out'}">${p.stock_quantity>0?'In stock':'Out of stock'}</span><button class="customer-view-image" type="button" data-fmv-image-zoom="${e(p.id)}" aria-label="View full product image of ${e(p.name)}">View full image</button></div><h4>${e(p.name)}</h4><p class="customer-product-description">${e(p.description)}</p><div class="customer-product-price"><strong>${FMV.money(p.price)}</strong><span>per ${e(p.unit)}${p.tax_rate?'<br>+ '+Number(p.tax_rate)+'% GST':''}</span></div><div class="customer-product-actions"><div class="customer-quantity" aria-label="Quantity for ${e(p.name)}"><button aria-label="Decrease ${e(p.name)} quantity" onclick="adjustQty('${e(p.id)}',-1)">−</button><span id="qty-${e(p.id)}" aria-live="polite">1</span><button aria-label="Increase ${e(p.name)} quantity" onclick="adjustQty('${e(p.id)}',1)">+</button></div><button class="customer-add-button" ${p.stock_quantity<=0?'disabled':''} onclick="addToCart('${e(p.id)}')">Add to cart <span aria-hidden="true">+</span></button></div><button class="customer-subscribe-button" onclick="subscribeProduct('${e(p.id)}')">Make it a subscription ${customerArrowIcon()}</button></article>`).join('') || customerEmpty('A fresh selection is on its way','No products are currently available. Please check back later.'));
 }
 function adjustQty(id,delta){const el=document.getElementById('qty-'+id),p=productsCatalog.find(p=>p.id===id);if(el && p)el.textContent=Math.max(1,Math.min(p.stock_quantity || 1,Number(el.textContent)+delta));}
 function saveFmvCart(changed=true){
@@ -1319,3 +1319,31 @@ document.addEventListener('DOMContentLoaded',()=>{
 // Image fallbacks use listeners, preserving the CSP ban on inline event handlers.
 document.addEventListener('error',event=>{if(event.target instanceof HTMLImageElement && event.target.classList.contains('customer-product-image')){event.target.hidden=true;const art=event.target.parentElement.querySelector('.customer-product-illustration');if(art)art.hidden=false;}},true);
 document.addEventListener('load',event=>{if(event.target instanceof HTMLImageElement && event.target.classList.contains('customer-product-image')){const art=event.target.parentElement.querySelector('.customer-product-illustration');if(art)art.hidden=true;}},true);
+
+// Accessible full-product preview: opens the original asset without cropping.
+// Image source is reused from the already validated catalog image element.
+document.addEventListener('click',event=>{
+  const button=event.target.closest?.('[data-fmv-image-zoom]');
+  if(!button)return;
+  const card=button.closest('.customer-product-card');
+  const photo=card?.querySelector('.customer-product-image');
+  if(!photo||photo.hidden||!photo.src){FMV.notice('Full-size image is unavailable for this product.',true);return;}
+  let dialog=document.getElementById('fmv-product-full-image');
+  if(!dialog){
+    dialog=document.createElement('dialog');
+    dialog.id='fmv-product-full-image';
+    dialog.className='fmv-product-full-image';
+    dialog.setAttribute('aria-label','Full product image');
+    dialog.innerHTML='<button type="button" class="fmv-product-view-close" aria-label="Close full image" data-close-full-product>✕</button><img alt=""><p></p>';
+    dialog.addEventListener('click',e=>{
+      if(e.target===dialog||e.target.closest('[data-close-full-product]'))dialog.close();
+    });
+    document.body.append(dialog);
+  }
+  const name=card.querySelector('h4')?.textContent||'First Milk Venture product';
+  const img=dialog.querySelector('img');
+  img.src=photo.currentSrc||photo.src;
+  img.alt=name;
+  dialog.querySelector('p').textContent=name;
+  if(!dialog.open)dialog.showModal();
+});
