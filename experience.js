@@ -6,6 +6,32 @@
   const e=value=>FMV.escape(value);
   const $=id=>document.getElementById(id);
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
+  let campaignMediaObserver=null;
+  function activateCampaignVideo(video){
+    if(!video || document.hidden || motion.matches || video.closest('[hidden]'))return;
+    if(!video.getAttribute('src') && video.dataset.fmvSrc){
+      video.src=video.dataset.fmvSrc;
+      video.preload='auto';
+      video.load();
+    }
+    if(video.getAttribute('src'))video.play().catch(()=>{});
+  }
+  function prepareCampaignVideos(){
+    if(campaignMediaObserver){campaignMediaObserver.disconnect();campaignMediaObserver=null;}
+    const videos=Array.from(document.querySelectorAll('.fmv-campaign video'));
+    if(!videos.length)return;
+    if(typeof IntersectionObserver==='undefined'){
+      for(const video of videos)activateCampaignVideo(video);
+      return;
+    }
+    campaignMediaObserver=new IntersectionObserver(entries=>{
+      for(const entry of entries){
+        if(entry.isIntersecting)activateCampaignVideo(entry.target);
+        else entry.target.pause();
+      }
+    },{rootMargin:'500px 0px',threshold:0.01});
+    for(const video of videos)campaignMediaObserver.observe(video);
+  }
   const icons={address:'⌂',orders:'▣',wallet:'◈',edit:'✎',workspace:'▦',notifications:'♧',help:'?',ai:'✦',feedback:'♡',logout:'↪'};
   const row=(action,label,icon)=>`<button type="button" class="fmv-profile-row" data-fmv-action="${action}"><span class="fmv-row-icon" aria-hidden="true">${icons[icon] || '›'}</span><span>${e(label)}</span><span aria-hidden="true">›</span></button>`;
 
@@ -24,12 +50,12 @@
       if(subarea==='addresses')refreshAddresses();
       if(subarea==='orders')loadDashboardStatus();
     }
+    // Visible, muted videos begin loading near the viewport; other media stays idle.
     for(const video of document.querySelectorAll('.fmv-campaign video')){
-      if(area==='home' || area==='offers'){
-        if(video.closest('[data-customer-area]')?.hidden || motion.matches)video.pause();
-        else video.play().catch(()=>{});
-      }else video.pause();
+      if(video.closest('[hidden]') || motion.matches)video.pause();
+      else if(video.getAttribute('src'))activateCampaignVideo(video);
     }
+    prepareCampaignVideos();
     if(subarea==='catalog')$('product-grid').scrollIntoView({behavior:motion.matches?'auto':'smooth'});
     else window.scrollTo({top:0,behavior:'auto'});
   }
@@ -100,7 +126,7 @@
     // Promotional media is decorative, muted and inline. Native controls are hidden.
     // The browser may decline autoplay (e.g. data saver or reduced motion); never show chrome.
     let media='';
-    if(src)media=video?`<video src="${e(src)}" muted loop playsinline webkit-playsinline autoplay preload="none" disablepictureinpicture disableremoteplayback aria-label="${e(item.alt_text || item.title)}" tabindex="-1"></video>`:`<img src="${e(src)}" alt="${e(item.alt_text || item.title)}" loading="lazy" decoding="async">`;
+    if(src)media=video?`<video data-fmv-src="${e(src)}" muted loop playsinline webkit-playsinline autoplay preload="none" disablepictureinpicture disableremoteplayback aria-label="${e(item.alt_text || item.title)}" tabindex="-1"></video>`:`<img src="${e(src)}" alt="${e(item.alt_text || item.title)}" loading="lazy" decoding="async">`;
     return `<article class="fmv-campaign" data-animation="${motion.matches?'none':e(item.animation)}" data-campaign-id="${e(item.id)}" style="--campaign-width:${Number(item.display_width) || 1200}px;--campaign-ratio:${Number(item.display_width) || 1200}/${Number(item.display_height) || 300};--campaign-fit:${item.media_fit==='cover'?'cover':'contain'}">${media}<div class="fmv-campaign-copy"><span class="customer-eyebrow">${e(item.kind==='menu'?'Fresh picks':item.kind==='offer'?'FMV offers':'First Milk Venture')}</span><h3>${e(item.title)}</h3><p>${e(item.description)}</p>${item.terms?`<small>${e(item.terms)}</small>`:''}<button type="button" class="fmv-btn" data-fmv-action="campaign-link" data-target="${e(item.cta_path)}">${e(item.cta_label || 'Explore')} <span aria-hidden="true">↗</span></button></div></article>`;
   }
 
@@ -118,6 +144,7 @@
     const offers=state.campaigns.filter(c=>c.placement==='offers' || c.kind==='offer');
     $('fmv-offers-grid').innerHTML=offers.map(campaignMarkup).join('') || customerEmpty('Fresh offers are on their way','Published offers and seasonal posts will appear here.');
     const hero=document.querySelector('.customer-hero');hero.hidden=state.area!=='home' || banners.length>0;
+    prepareCampaignVideos();
   }
 
   const policies={
@@ -189,21 +216,29 @@
     build();document.addEventListener('click',event=>FMV.guard(()=>click(event)));
     setInterval(()=>{if(state.area==='home' && !document.hidden && !state.pause && !motion.matches && !$('fmv-banner-slot').matches(':focus-within,:hover'))moveBanner(1);},6000);
   });
-  document.addEventListener('fmv:authenticated',()=>FMV.guard(async()=>{try{state.selectedAddress=JSON.parse(sessionStorage.getItem('fmv_cart_'+FMV.user.id) || '{}').addressId || '';}catch(error){state.selectedAddress='';}navigate('home');await Promise.all([refreshAddresses(),refreshCampaigns()]);}));
-  document.addEventListener('fmv:sync',()=>FMV.guard(async()=>{
+  document.addEventListener('fmv:authenticated',()=>{
     if(!FMV.user)return;
-    // Do not overwrite an address form or reset a banner during active input.
-    const snapshot=await FMV.snapshot();
-    if(!document.activeElement?.closest('#fmv-address-form'))await refreshAddresses({addresses:snapshot.addresses,user:snapshot.user});
-    await refreshCampaigns(snapshot.content);
-  }));
+    try{state.selectedAddress=JSON.parse(sessionStorage.getItem('fmv_cart_'+FMV.user.id) || '{}').addressId || '';}catch(error){state.selectedAddress='';}
+    // Show the home view immediately. The existing customer snapshot fills
+    // products, campaign media and addresses with one authenticated request.
+    navigate('home');
+  });
+  async function applySnapshot(snapshot){
+    if(!FMV.user || !snapshot)return;
+    if(!document.activeElement?.closest('#fmv-address-form'))
+      await refreshAddresses({addresses:snapshot.addresses || [],user:snapshot.user});
+    if(snapshot.content)await refreshCampaigns(snapshot.content);
+  }
   document.addEventListener('fmv:locked',()=>{
     state.addresses=[];state.selectedAddress='';state.campaigns=[];state.area='home';
     for(const id of ['fmv-profile-name','fmv-profile-phone','fmv-profile-email','fmv-address-list','fmv-checkout-address','fmv-checkout-recipient','fmv-banner-track','fmv-offers-grid','fmv-home-posts'])if($(id))$(id).replaceChildren();
     $('fmv-address-form')?.reset();if($('fmv-address-form'))$('fmv-address-form').hidden=true;
     for(const modal of document.querySelectorAll('#profile-modal,#search-modal,#cart-drawer'))modal.classList.add('hidden');
   });
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)document.querySelectorAll('.fmv-campaign video').forEach(v=>v.pause());});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)document.querySelectorAll('.fmv-campaign video').forEach(video=>video.pause());
+    else prepareCampaignVideos();
+  });
   const legacyCheck=window.checkUserSession;
   window.checkUserSession=()=>{legacyCheck();if($('fmv-profile-name'))renderIdentity();};
   const legacyHub=window.openPortalHub;
@@ -216,5 +251,5 @@
   for(const name of ['closeCartDrawer','closeSearchModal','closeEditProfileModal']){
     const close=window[name];window[name]=()=>{close();setCustomerNavigation(state.area);};
   }
-  window.FMVExperience={navigate,get selectedAddress(){return state.selectedAddress;},refreshAddresses,renderIdentity};
+  window.FMVExperience={navigate,get selectedAddress(){return state.selectedAddress;},refreshAddresses,renderIdentity,applySnapshot};
 })();
