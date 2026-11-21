@@ -97,12 +97,10 @@
     const src=item.media_url?FMV.apiBase+item.media_url:'';
     const video=item.mime_type==='video/mp4';
     const animated=/gif|webp/.test(item.mime_type) || video;
-    // Videos larger than 1.5 MB never preload or autoplay when opening Home.
-    // The customer opts in to each video, saving mobile data and UI latency.
-    const largeVideo=video && Number(item.media_size)>1500000;
+    // Promotional media is decorative, muted and inline. Native controls are hidden.
+    // The browser may decline autoplay (e.g. data saver or reduced motion); never show chrome.
     let media='';
-    if(src && (!animated || (!motion.matches && !largeVideo)))media=video?`<video src="${e(src)}" muted loop playsinline controls preload="metadata" ${motion.matches?'':'autoplay'} aria-label="${e(item.alt_text || item.title)}"></video>`:`<img src="${e(src)}" alt="${e(item.alt_text || item.title)}" loading="lazy">`;
-    else if(src)media=`<button type="button" class="fmv-play-media" data-fmv-action="play-media" data-id="${e(item.id)}">Play ${video?'video':'animation'} · ${e(item.title)}</button>`;
+    if(src)media=video?`<video src="${e(src)}" muted loop playsinline webkit-playsinline autoplay preload="none" disablepictureinpicture disableremoteplayback aria-label="${e(item.alt_text || item.title)}" tabindex="-1"></video>`:`<img src="${e(src)}" alt="${e(item.alt_text || item.title)}" loading="lazy" decoding="async">`;
     return `<article class="fmv-campaign" data-animation="${motion.matches?'none':e(item.animation)}" data-campaign-id="${e(item.id)}" style="--campaign-width:${Number(item.display_width) || 1200}px;--campaign-ratio:${Number(item.display_width) || 1200}/${Number(item.display_height) || 300};--campaign-fit:${item.media_fit==='cover'?'cover':'contain'}">${media}<div class="fmv-campaign-copy"><span class="customer-eyebrow">${e(item.kind==='menu'?'Fresh picks':item.kind==='offer'?'FMV offers':'First Milk Venture')}</span><h3>${e(item.title)}</h3><p>${e(item.description)}</p>${item.terms?`<small>${e(item.terms)}</small>`:''}<button type="button" class="fmv-btn" data-fmv-action="campaign-link" data-target="${e(item.cta_path)}">${e(item.cta_label || 'Explore')} <span aria-hidden="true">↗</span></button></div></article>`;
   }
 
@@ -182,7 +180,7 @@
     if(action==='play-media'){
       const item=state.campaigns.find(c=>c.id===id);if(!item)return;
       const asset=document.createElement(item.mime_type==='video/mp4'?'video':'img');asset.src=FMV.apiBase+item.media_url;
-      if(asset instanceof HTMLVideoElement){asset.controls=true;asset.muted=true;asset.playsInline=true;asset.play().catch(()=>{});}else asset.alt=item.alt_text || item.title;
+      if(asset instanceof HTMLVideoElement){asset.controls=false;asset.muted=true;asset.loop=true;asset.autoplay=true;asset.playsInline=true;asset.preload='none';asset.disablePictureInPicture=true;asset.play().catch(()=>{});}else asset.alt=item.alt_text || item.title;
       button.replaceWith(asset);
     }
   }
