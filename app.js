@@ -1123,16 +1123,24 @@ function customerProductIllustration(product){
 }
 function customerProductVisual(product){
   let image='';
-  try{if(typeof product.image_url==='string' && product.image_url.trim()){const url=new URL(product.image_url,product.image_url.startsWith('/media/products/')?FMV.apiBase+'/':location.origin);if((url.protocol==='https:' || url.origin===location.origin) && !url.username && !url.password)image=url.href;}}catch(error){}
-  // Product-specific brand artwork is the local fallback; original admin uploads win.
+  try{
+    if(typeof product.image_url==='string' && product.image_url.trim()){
+      const url=new URL(product.image_url,product.image_url.startsWith('/media/products/')?FMV.apiBase+'/':location.origin);
+      if((url.protocol==='https:' || url.origin===location.origin) && !url.username && !url.password)image=url.href;
+    }
+  }catch(error){}
   if(!image){
     const n=String(product.name||'').toLowerCase();
     const type=/ghee/.test(n)?'ghee':/curd|yogurt|yoghurt/.test(n)?'curd':/butter/.test(n)?'butter':/paneer|cheese/.test(n)?'paneer':'milk';
     image='assets/products/fmv-'+type+'.svg';
   }
-  const photo=`<img class="customer-product-image" src="${FMV.escape(image)}" alt="${FMV.escape(product.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
-  const badge='<img class="fmv-product-logo-overlay" src="assets/brand/fmv-logo.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">';
-  return customerProductIllustration(product)+photo+badge;
+  // Dedicated catalog class, independent of legacy fixed-height banner styles.
+  // Every active product photo is a square asset; explicit dimensions also
+  // reserve the expected space while mobile images are being downloaded.
+  const photo=`<img class="fmv-catalog-photo" src="${FMV.escape(image)}" width="1000" height="1000"
+    style="display:block;width:100%;height:auto;max-width:100%;object-fit:contain;"
+    alt="${FMV.escape(product.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
+  return customerProductIllustration(product)+photo;
 }
 function customerPaymentLabel(value){const labels={cod_due:'Cash on delivery',pending:'Payment pending',unpaid:'Payment pending',paid:'Paid'};return labels[String(value).toLowerCase()] || String(value || '');}
 function customerStatusTone(value){return /^(delivered|paid|active|approved|resolved|completed)$/i.test(String(value))?'success':/cancel|fail|reject|overdue/i.test(String(value))?'danger':'';}
@@ -1157,7 +1165,29 @@ async function loadProducts(supplied){if(!FMV.user)return;return FMV.guard(async
 });}
 function renderProducts(){
   const e=FMV.escape;
-  FMV.setHTML('product-grid',productsCatalog.map((p,index)=>`<article class="customer-product-card" data-tone="${index%3}"><div class="customer-product-visual">${customerProductVisual(p)}<span class="customer-unit">${e(p.unit)}</span><span class="customer-product-stock ${p.stock_quantity>0?'':'is-out'}">${p.stock_quantity>0?'In stock':'Out of stock'}</span><button class="customer-view-image" type="button" data-fmv-image-zoom="${e(p.id)}" aria-label="View full product image of ${e(p.name)}">View full image</button></div><h4>${e(p.name)}</h4><p class="customer-product-description">${e(p.description)}</p><div class="customer-product-price"><strong>${FMV.money(p.price)}</strong><span>per ${e(p.unit)}${p.tax_rate?'<br>+ '+Number(p.tax_rate)+'% GST':''}</span></div><div class="customer-product-actions"><div class="customer-quantity" aria-label="Quantity for ${e(p.name)}"><button aria-label="Decrease ${e(p.name)} quantity" onclick="adjustQty('${e(p.id)}',-1)">−</button><span id="qty-${e(p.id)}" aria-live="polite">1</span><button aria-label="Increase ${e(p.name)} quantity" onclick="adjustQty('${e(p.id)}',1)">+</button></div><button class="customer-add-button" ${p.stock_quantity<=0?'disabled':''} onclick="addToCart('${e(p.id)}')">Add to cart <span aria-hidden="true">+</span></button></div><button class="customer-subscribe-button" onclick="subscribeProduct('${e(p.id)}')">Make it a subscription ${customerArrowIcon()}</button></article>`).join('') || customerEmpty('A fresh selection is on its way','No products are currently available. Please check back later.'));
+  FMV.setHTML('product-grid',productsCatalog.map((p,index)=>`<article class="customer-product-card fmv-catalog-card-v4" data-tone="${index%3}" data-catalog-version="4">
+    <div class="fmv-catalog-media" aria-label="Full product photo">
+      ${customerProductVisual(p)}
+      <span class="fmv-catalog-stock ${p.stock_quantity>0?'':'is-out'}">${p.stock_quantity>0?'In stock':'Out of stock'}</span>
+      <button type="button" class="fmv-catalog-enlarge" data-fmv-image-zoom="${e(p.id)}" aria-label="View full photo of ${e(p.name)}">View full photo ↗</button>
+    </div>
+    <h4>${e(p.name)}</h4>
+    <p class="customer-product-description">${e(p.description)}</p>
+    <div class="fmv-buy-panel">
+      <div class="fmv-buy-top">
+        <div class="fmv-buy-price"><strong>${FMV.money(p.price)}</strong><span>per ${e(p.unit)}${p.tax_rate?'<br>+ '+Number(p.tax_rate)+'% GST':''}</span></div>
+        <div class="customer-quantity" aria-label="Quantity for ${e(p.name)}">
+          <button aria-label="Decrease ${e(p.name)} quantity" onclick="adjustQty('${e(p.id)}',-1)">−</button>
+          <span id="qty-${e(p.id)}" aria-live="polite">1</span>
+          <button aria-label="Increase ${e(p.name)} quantity" onclick="adjustQty('${e(p.id)}',1)">+</button>
+        </div>
+      </div>
+      <div class="fmv-buy-actions">
+        <button class="customer-add-button" ${p.stock_quantity<=0?'disabled':''} onclick="addToCart('${e(p.id)}')">Add to cart <span aria-hidden="true">+</span></button>
+        <button class="customer-subscribe-button" aria-label="Make ${e(p.name)} a subscription" onclick="subscribeProduct('${e(p.id)}')">Subscribe ${customerArrowIcon()}</button>
+      </div>
+    </div>
+  </article>`).join('') || customerEmpty('A fresh selection is on its way','No products are currently available. Please check back later.'));
 }
 function adjustQty(id,delta){const el=document.getElementById('qty-'+id),p=productsCatalog.find(p=>p.id===id);if(el && p)el.textContent=Math.max(1,Math.min(p.stock_quantity || 1,Number(el.textContent)+delta));}
 function saveFmvCart(changed=true){
@@ -1317,8 +1347,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 // Image fallbacks use listeners, preserving the CSP ban on inline event handlers.
-document.addEventListener('error',event=>{if(event.target instanceof HTMLImageElement && event.target.classList.contains('customer-product-image')){event.target.hidden=true;const art=event.target.parentElement.querySelector('.customer-product-illustration');if(art)art.hidden=false;}},true);
-document.addEventListener('load',event=>{if(event.target instanceof HTMLImageElement && event.target.classList.contains('customer-product-image')){const art=event.target.parentElement.querySelector('.customer-product-illustration');if(art)art.hidden=true;}},true);
+document.addEventListener('error',event=>{if(event.target instanceof HTMLImageElement && event.target.classList.contains('fmv-catalog-photo')){event.target.hidden=true;const art=event.target.parentElement.querySelector('.customer-product-illustration');if(art)art.hidden=false;}},true);
+document.addEventListener('load',event=>{if(event.target instanceof HTMLImageElement && event.target.classList.contains('fmv-catalog-photo')){const art=event.target.parentElement.querySelector('.customer-product-illustration');if(art)art.hidden=true;}},true);
 
 // Accessible full-product preview: opens the original asset without cropping.
 // Image source is reused from the already validated catalog image element.
@@ -1326,7 +1356,7 @@ document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-fmv-image-zoom]');
   if(!button)return;
   const card=button.closest('.customer-product-card');
-  const photo=card?.querySelector('.customer-product-image');
+  const photo=card?.querySelector('.fmv-catalog-photo');
   if(!photo||photo.hidden||!photo.src){FMV.notice('Full-size image is unavailable for this product.',true);return;}
   let dialog=document.getElementById('fmv-product-full-image');
   if(!dialog){

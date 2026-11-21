@@ -73,6 +73,26 @@ test('The final-loaded branded CSS keeps square product photos in normal documen
  assert.match(stylesheet,/object-fit:contain!important/);
  assert.match(stylesheet,/height:auto!important/);
  assert.match(stylesheet,/\.customer-product-image\[hidden\]\{/);
- assert.match(page,/brand\.css\?v=20261121-catalog-v3/);
- assert.match(page,/app\.js\?v=20261121-catalog-v3/);
+ assert.match(page,/brand\.css\?v=20261121-catalog-v4/);
+ assert.match(page,/app\.js\?v=20261121-catalog-v4/);
+});
+
+test('Catalog v4 uses a fresh square media stage rather than legacy cropped visual',()=>{
+ const script=html('app.js'),css=html('brand.css'),page=html('index.html');
+ const render=script.slice(script.indexOf('function renderProducts(){'),script.indexOf('function adjustQty(id,delta){'));
+ const photo=script.slice(script.indexOf('function customerProductVisual(product){'),script.indexOf('function customerPaymentLabel(value){'));
+ assert.match(photo,/class="fmv-catalog-photo"/);
+ assert.match(photo,/width="1000" height="1000"/);
+ assert.doesNotMatch(render,/class="customer-product-visual"/);
+ assert.match(render,/class="fmv-catalog-media"/);
+ assert.match(render,/data-catalog-version="4"/);
+ assert.match(render,/class="fmv-buy-top"/);
+ assert.match(render,/class="fmv-buy-actions"/);
+ assert.match(render,/onclick="adjustQty/);
+ assert.match(render,/onclick="addToCart/);
+ assert.match(render,/onclick="subscribeProduct/);
+ assert.match(css,/#product-grid \.fmv-catalog-card-v4 img\.fmv-catalog-photo\{/);
+ assert.match(css,/aspect-ratio:1 \/ 1!important;object-fit:contain!important/);
+ assert.match(page,/brand\.css\?v=20261121-catalog-v4/);
+ assert.match(page,/app\.js\?v=20261121-catalog-v4/);
 });
