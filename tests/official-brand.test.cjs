@@ -60,7 +60,7 @@ test('Customer catalog displays uncropped branded images with a full-image previ
  assert.match(css,/\.fmv-product-full-image img\{[^}]*object-fit:contain/);
  assert.match(app,/data-fmv-image-zoom/);
  assert.match(app,/dialog\.showModal\(\)/);
- assert.match(page,/portal-theme\.css\?v=20261121-full-image/);
+ assert.match(page,/portal-theme\.css\?v=20261121-catalog-v3/);
  assert.doesNotMatch(css,/\.customer-product-card:hover \.customer-product-image\{transform:scale/);
 });
 
