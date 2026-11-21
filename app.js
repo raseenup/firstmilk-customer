@@ -1195,11 +1195,14 @@ function saveFmvCart(changed=true){
   if(changed)fmvCheckoutKey=null;
   if(FMV.user)sessionStorage.setItem('fmv_cart_'+FMV.user.id,JSON.stringify({items:cart.map(i=>({id:i.id,quantity:i.quantity})),checkoutKey:fmvCheckoutKey,addressId:window.FMVExperience?.selectedAddress || ''}));
 }
-function addToCart(id){
-  const p=productsCatalog.find(p=>p.id===id);if(!p)return;
-  const qty=Number(document.getElementById('qty-'+id)?.textContent || 1),existing=cart.find(i=>i.id===id);
-  if(qty+(existing?.quantity || 0)>p.stock_quantity){FMV.notice('The requested quantity exceeds available stock.',true);return;}
-  if(existing)existing.quantity+=qty;else cart.push({...p,quantity:qty});saveFmvCart();updateCartBadge();FMV.notice('Added to cart.');
+function addToCart(id,selectedQuantity){
+  const p=productsCatalog.find(p=>p.id===id);if(!p)return false;
+  const qty=selectedQuantity===undefined?Number(document.getElementById('qty-'+id)?.textContent || 1):Number(selectedQuantity);
+  const existing=cart.find(i=>i.id===id);
+  if(!Number.isSafeInteger(qty) || qty<1){FMV.notice('Select a valid quantity.',true);return false;}
+  if(qty+(existing?.quantity || 0)>Number(p.stock_quantity)){FMV.notice('The requested quantity exceeds available stock.',true);return false;}
+  if(existing)existing.quantity+=qty;else cart.push({...p,quantity:qty});
+  saveFmvCart();updateCartBadge();FMV.notice('Added to cart.');return true;
 }
 function changeCartQty(index,delta){const item=cart[index];if(!item)return;const p=productsCatalog.find(p=>p.id===item.id);if(!p)return;if(item.quantity+delta>p.stock_quantity){FMV.notice('Available stock limit reached.',true);return;}item.quantity+=delta;if(item.quantity<=0)cart.splice(index,1);saveFmvCart();renderCartItems();updateCartBadge();}
 function removeFromCart(index){cart.splice(index,1);saveFmvCart();renderCartItems();updateCartBadge();}
@@ -1252,8 +1255,9 @@ async function loadDashboardStatus(supplied){if(!FMV.user)return;return FMV.guar
 });}
 function resumePayment(id){return FMV.guard(()=>FMV.pay(id));}
 function cancelCustomerOrder(id){return FMV.guard(async()=>{const result=await FMV.request('/orders/'+encodeURIComponent(id)+'/cancel',{method:'POST'});await loadDashboardStatus({orders:fmvOrders.map(o=>o.id===id?result.order:o),subscriptions:fmvSubscriptions});FMV.notice('Order cancelled. Cancellation email queued.');refreshCustomer();});}
-function subscribeProduct(id){return FMV.guard(async()=>{
-  const quantity=Number(prompt('Quantity per delivery:','1'));if(!quantity)return;
+function subscribeProduct(id,selectedQuantity){return FMV.guard(async()=>{
+  const defaultQuantity=Number.isSafeInteger(Number(selectedQuantity)) && Number(selectedQuantity)>0?Number(selectedQuantity):1;
+  const quantity=Number(prompt('Quantity per delivery:',String(defaultQuantity)));if(!quantity)return;
   const frequency=prompt('Frequency: Daily, Weekly or Alternate Days','Daily');if(!frequency)return;
   const start=prompt('First delivery date (YYYY-MM-DD):',new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'}));if(!start)return;
   const result=await FMV.request('/subscriptions',{method:'POST',body:{product_id:id,quantity,frequency,start_date:start,zone_id:'Zone-1'}});FMV.notice(result.message);loadDashboardStatus();
@@ -1265,7 +1269,7 @@ async function saveProfileDetails(){return FMV.guard(async()=>{
   await FMV.request('/portal/company-profile',{method:'PATCH',body:{company_name:FMV.val('edit-company-name'),tax_registration_number:FMV.val('edit-tax-id'),billing_address:FMV.val('edit-billing-address'),notification_preferences:{email:!!document.getElementById('pref-notif-email')?.checked,sms:!!document.getElementById('pref-notif-sms')?.checked,inapp:!!document.getElementById('pref-notif-inapp')?.checked},preferred_currency:'INR'}});
   const session=await FMV.request('/auth/session');Object.assign(FMV.user,session.user);closeEditProfileModal();checkUserSession();FMV.notice('Profile saved.');
 });}
-function executeSearch(){const query=FMV.val('search-input').toLowerCase(),e=FMV.escape;FMV.setHTML('search-results-container',productsCatalog.filter(p=>(p.name+' '+p.description).toLowerCase().includes(query)).map(p=>`<div class="fmv-row"><div><strong>${e(p.name)}</strong><p class="fmv-small">${FMV.money(p.price)} · ${p.stock_quantity} available</p></div><button class="fmv-btn" onclick="addToCart('${e(p.id)}')">Add</button></div>`).join('') || FMV.empty('No matching products.'));}
+function executeSearch(){const query=FMV.val('search-input').toLowerCase(),e=FMV.escape;FMV.setHTML('search-results-container',productsCatalog.filter(p=>(p.name+' '+p.description).toLowerCase().includes(query)).map(p=>`<div class="fmv-row"><div><strong>${e(p.name)}</strong><p class="fmv-small">${FMV.money(p.price)} · In stock</p></div><button class="fmv-btn" onclick="addToCart('${e(p.id)}')">Add</button></div>`).join('') || FMV.empty('No matching products.'));}
 function switchTab(tab){setCustomerNavigation(tab);if(tab==='offers'){FMV.notice('Current prices and availability are shown in the product catalog.');document.getElementById('product-grid')?.scrollIntoView({behavior:'smooth'});return;}if(tab==='home')document.getElementById('product-grid')?.scrollIntoView({behavior:'smooth'});}
 function formatPortalAmount(amount){return FMV.money(amount);}
 function changePortalCurrency(){portalCurrency='INR';const e=document.getElementById('portal-currency-select');if(e)e.value='INR';FMV.notice('Prices and payments are shown in rupees (₹).');}
