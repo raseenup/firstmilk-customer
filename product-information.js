@@ -7,6 +7,7 @@
   let current = null;
   let loadingId = 0;
   let view = 'specifications';
+  let quantity = 1;
   const infoFields = [
     ['brand','Brand'],['generic_name','Generic name'],
     ['manufacturer_name','Manufacturer'],['manufacturer_address','Manufacturer address'],
@@ -65,7 +66,8 @@
     const dialog=$('fmv-product-information-dialog');
     if(!dialog)return;
     const info=information||{};
-    const stock=Number(product.stock_quantity||0);
+    const stock=Math.max(0,Number(product.stock_quantity||0));
+    quantity=Math.min(Math.max(1,quantity),Math.max(1,stock));
     const highlights=Array.isArray(info.highlights)?info.highlights.filter(Boolean):[];
     const faqs=Array.isArray(info.faqs)?info.faqs.filter(q=>q.question&&q.answer):[];
     const names=[
@@ -78,14 +80,17 @@
       '<div class="fmv-pi-layout">'+
         '<header class="fmv-pi-head"><div><span class="fmv-pi-eyebrow">FIRST MILK VENTURE · PRODUCT INFORMATION</span><h2 id="fmv-pi-title">'+esc(product.name)+'</h2></div><button type="button" class="fmv-pi-close" data-pi-close aria-label="Close product details">×</button></header>'+
         '<div class="fmv-pi-scroll">'+
-          '<div class="fmv-pi-hero"><div class="fmv-pi-picture">'+(typeof customerProductVisual==='function'?customerProductVisual(product):'')+'</div><div class="fmv-pi-hero-copy"><p class="fmv-pi-tag">Know what is in your basket</p><h3>'+esc(product.name)+'</h3><p>'+esc(product.description||'')+'</p><strong>'+FMV.money(product.price)+'</strong><span class="fmv-pi-stock">'+(stock>0?'Available to order · '+esc(stock)+' in stock':'Currently out of stock')+'</span></div></div>'+
+          '<div class="fmv-pi-hero"><div class="fmv-pi-picture">'+(typeof customerProductVisual==='function'?customerProductVisual(product):'')+'</div><div class="fmv-pi-hero-copy"><p class="fmv-pi-tag">Know what is in your basket</p><h3>'+esc(product.name)+'</h3><p>'+esc(product.description||'')+'</p><strong>'+FMV.money(product.price)+'</strong><span class="fmv-pi-stock">'+(stock>0?'Available to order':'Currently out of stock')+'</span></div></div>'+
           '<section class="fmv-pi-section"><h3>Product highlights</h3>'+(highlights.length?'<ul class="fmv-pi-highlights">'+highlights.map(listRow).join('')+'</ul>':missing('Product highlights have not yet been published.'))+'</section>'+
           '<section class="fmv-pi-section"><h3>All details</h3><div class="fmv-pi-tabs" role="tablist" aria-label="Product details">'+tabs+'</div><div id="fmv-pi-tabpanel" class="fmv-pi-tabpanel" role="tabpanel">'+tabContent(info,product)+'</div></section>'+
           '<section class="fmv-pi-section"><h3>Ratings and reviews</h3>'+missing('Verified customer ratings and reviews are not available for this product yet.')+'</section>'+
           '<section class="fmv-pi-section"><h3>Questions and answers</h3>'+(faqList||missing('No product questions and answers have been published yet.'))+'</section>'+
           (errorText?'<p class="fmv-pi-error" role="alert">'+esc(errorText)+'</p>':'')+
         '</div>'+
-        '<footer class="fmv-pi-actions"><button type="button" class="fmv-pi-subscribe" data-pi-subscribe '+(stock<=0?'disabled':'')+'>Subscribe</button><button type="button" class="fmv-pi-cart" data-pi-cart '+(stock<=0?'disabled':'')+'>Add to cart <span aria-hidden="true">+</span></button></footer>'+
+        '<footer class="fmv-pi-actions">'+
+        '<button type="button" class="fmv-pi-subscribe" data-pi-subscribe '+(stock<=0?'disabled':'')+'>Subscribe</button>'+
+        '<div class="fmv-pi-qty" role="group" aria-label="Select quantity"><button type="button" data-pi-qty="-1" aria-label="Decrease quantity" '+(stock<=0 || quantity<=1?'disabled':'')+'>−</button><output id="fmv-pi-quantity" aria-label="Selected quantity" aria-live="polite">'+esc(quantity)+'</output><button type="button" data-pi-qty="1" aria-label="Increase quantity" '+(stock<=0 || quantity>=stock?'disabled':'')+'>+</button></div>'+
+        '<button type="button" class="fmv-pi-cart" data-pi-cart aria-label="Add selected quantity to cart" title="Add to cart" '+(stock<=0?'disabled':'')+'><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 2h2l2.4 12.4a2 2 0 0 0 2 1.6h11a2 2 0 0 0 2-1.6L22 6H5"/></svg></button></footer>'+
       '</div>';
     const active=dialog.querySelector('.fmv-pi-tab[aria-selected="true"]');
     if(active)active.setAttribute('aria-controls','fmv-pi-tabpanel');
@@ -95,6 +100,7 @@
     if(!product)return;
     current=product;
     view='specifications';
+    quantity=1;
     const ticket=++loadingId;
     const dialog=$('fmv-product-information-dialog');
     render(product,{},'');
@@ -129,16 +135,28 @@
     dialog.addEventListener('click',(event)=>{
       const target=event.target.closest('button,[role="tab"]');if(!target)return;
       if(target.hasAttribute('data-pi-close')){close();return;}
+      if(target.hasAttribute('data-pi-qty')){
+        if(!current)return;
+        const max=Math.max(0,Number(current.stock_quantity||0));
+        if(max===0)return;
+        quantity=Math.max(1,Math.min(max,quantity+Number(target.dataset.piQty)));
+        const output=$('fmv-pi-quantity');if(output)output.textContent=String(quantity);
+        const minus=dialog.querySelector('[data-pi-qty="-1"]');if(minus)minus.disabled=quantity<=1;
+        const plus=dialog.querySelector('[data-pi-qty="1"]');if(plus)plus.disabled=quantity>=max;
+        return;
+      }
       if(target.hasAttribute('data-pi-cart')){
         const id=current?.id;
-        close();
-        if(id!=null && typeof addToCart==='function')addToCart(id);
+        if(id!=null && typeof addToCart==='function'){
+          const added=addToCart(id,quantity);
+          if(added===true)close();
+        }
         return;
       }
       if(target.hasAttribute('data-pi-subscribe')){
         const id=current?.id;
         close();
-        if(id!=null && typeof subscribeProduct==='function')subscribeProduct(id);
+        if(id!=null && typeof subscribeProduct==='function')subscribeProduct(id,quantity);
         return;
       }
       if(target.dataset.piTab) {
