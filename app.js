@@ -1327,9 +1327,11 @@ function applyWhiteLabelBranding(){return FMV.guard(async()=>{const result=await
 function renderAnalyticsAndAuditLogs(){FMV.setHTML('portal-analytics-kpis',`<div class="fmv-row"><span>Orders: ${Number(portalState.analytics?.orders || 0)}</span><span>Tickets: ${Number(portalState.analytics?.tickets || 0)}</span></div>`);FMV.setHTML('security-audit-logs-list',portalState.auditLogs.slice().reverse().map(l=>`<div class="fmv-row"><strong class="fmv-small">${FMV.escape(l.event)}</strong><span class="fmv-small">${FMV.escape(l.timestamp)}</span></div>`).join('') || FMV.empty('No account activity.'));}
 async function refreshCustomer(){if(!FMV.user)return;return FMV.refresh('customer',()=>FMV.guard(async()=>{
   const snapshot=await FMV.snapshot();
-  await Promise.all([loadProducts(snapshot.products),loadDashboardStatus(snapshot),hydrateEnterprisePortalFromBackend(snapshot.enterprise)]);checkUserSession();
+  await Promise.all([loadProducts(snapshot.products),loadDashboardStatus(snapshot),hydrateEnterprisePortalFromBackend(snapshot.enterprise),window.FMVExperience?.applySnapshot?.(snapshot)]);checkUserSession();
 }));}
 document.addEventListener('fmv:authenticated',async()=>{
+  if(!FMV.user)return;
+  checkUserSession();
   await refreshCustomer();if(!FMV.user)return;try{const stored=JSON.parse(sessionStorage.getItem('fmv_cart_'+FMV.user.id) || '{}');cart=(stored.items || []).map(line=>({...productsCatalog.find(p=>p.id===line.id),quantity:line.quantity})).filter(i=>i.id);fmvCheckoutKey=stored.checkoutKey || null;}catch(e){cart=[];}
   updateCartBadge();
 });
