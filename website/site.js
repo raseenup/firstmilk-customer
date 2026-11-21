@@ -49,6 +49,30 @@
     revealElements.forEach(element => observer.observe(element));
   }
 
+  // Start the branded video only once it enters the viewport (save mobile data).
+  const brandFilm=document.getElementById('fmv-film-video');
+  if(brandFilm){
+    const activateBrandFilm=()=>{
+      if(brandFilm.dataset.loaded)return;
+      brandFilm.dataset.loaded='true';
+      brandFilm.src=brandFilm.dataset.src;
+      brandFilm.load();
+      if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+        const promise=brandFilm.play();
+        if(promise && typeof promise.catch==='function')promise.catch(()=>{});
+      }
+    };
+    if('IntersectionObserver' in window){
+      const filmObserver=new IntersectionObserver(entries=>{
+        if(entries.some(entry=>entry.isIntersecting)){
+          activateBrandFilm();
+          filmObserver.disconnect();
+        }
+      },{rootMargin:'350px 0px'});
+      filmObserver.observe(brandFilm);
+    }else activateBrandFilm();
+  }
+
   // Email contact avoids introducing an unaudited public API or storing user data.
   // A verified support mailbox should be configured before publishing publicly.
   const form = document.getElementById('contact-form');
