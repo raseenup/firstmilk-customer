@@ -4,7 +4,12 @@ on:
     paths:
       - '**/*.js'
       - 'orders.css'
+      - 'website/**'
       - 'tests/**/*.cjs'
+      - 'assets/brand/**'
+      - 'brand.css'
+      - 'manifest.webmanifest'
+      - 'index.html'
       - '.github/workflows/portal-features-ci.yml'
   workflow_dispatch:
 jobs:
@@ -27,4 +32,4 @@ jobs:
       - name: Install browser-test dependencies
         run: npm install --no-save jsdom@27.2.0
       - name: Run shared portal browser tests
-        run: node --test tests/return-quality-ui.test.cjs tests/return-collection-ui.test.cjs tests/portal-core.test.cjs tests/returned-orders.test.cjs website/tests/chat.test.cjs
+        run: node --test tests/official-brand.test.cjs tests/return-quality-ui.test.cjs tests/return-collection-ui.test.cjs tests/portal-core.test.cjs tests/returned-orders.test.cjs website/tests/chat.test.cjs
