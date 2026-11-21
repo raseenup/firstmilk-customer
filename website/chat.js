@@ -20,7 +20,7 @@
     toggle.setAttribute('aria-controls','fmv-ai-chat-panel');
     toggle.title = 'Ask FMV AI';
     // Static icon; never render untrusted text using innerHTML.
-    toggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M20 11.5a8.3 8.3 0 0 1-12 7.4L3.5 20l1.2-4.4A8.3 8.3 0 1 1 20 11.5Z"/><path d="m12 8-.9 2.2L9 11l2.1.9L12 14l.9-2.1L15 11l-2.1-.8Z"/></svg>';
+    toggle.innerHTML = '<img class="fmv-ai-brand-icon" src="assets/brand/fmv-icon.webp" alt="" width="44" height="44" decoding="async">';
     const panel = create('section','fmv-ai-panel');
     panel.id = 'fmv-ai-chat-panel';
     panel.hidden = true;
