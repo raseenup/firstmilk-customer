@@ -63,3 +63,16 @@ test('Customer catalog displays uncropped branded images with a full-image previ
  assert.match(page,/portal-theme\.css\?v=20261121-full-image/);
  assert.doesNotMatch(css,/\.customer-product-card:hover \.customer-product-image\{transform:scale/);
 });
+
+test('The final-loaded branded CSS keeps square product photos in normal document flow',()=>{
+ const stylesheet=html('brand.css');
+ const page=html('index.html');
+ assert.match(stylesheet,/Catalog image hotfix v3/);
+ assert.match(stylesheet,/\.customer-product-visual > img\.customer-product-image\{/);
+ assert.match(stylesheet,/position:relative!important/);
+ assert.match(stylesheet,/object-fit:contain!important/);
+ assert.match(stylesheet,/height:auto!important/);
+ assert.match(stylesheet,/\.customer-product-image\[hidden\]\{/);
+ assert.match(page,/brand\.css\?v=20261121-catalog-v3/);
+ assert.match(page,/app\.js\?v=20261121-catalog-v3/);
+});
