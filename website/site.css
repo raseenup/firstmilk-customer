@@ -330,3 +330,15 @@ h1 em,h2 em{font-style:normal;color:#26856b}
 .product-illustration .fmv-product-card-logo{position:absolute;z-index:3;left:12px;bottom:12px;width:53px;height:46px;padding:3px;border-radius:12px;object-fit:contain;background:rgba(255,255,255,.92);box-shadow:0 4px 16px rgba(9,52,57,.15)}
 .card-no{z-index:4;background:rgba(255,255,255,.89);padding:7px 10px;border-radius:999px;color:#174c48}
 @media(prefers-reduced-motion:reduce){.product-illustration .fmv-product-art{transition:none!important;transform:none!important}}
+
+/* First Milk Venture brand film. No playback chrome; responsive 16:9 media. */
+.fmv-brand-film{padding:84px 0 90px;background:linear-gradient(145deg,#eaf6e9,#fff8e7 60%,#eaf6f8);position:relative;isolation:isolate}
+.fmv-brand-film-heading{text-align:center;margin:0 auto 30px;max-width:740px}
+.fmv-brand-film-heading h2{font-size:clamp(32px,5vw,58px);line-height:1.1;color:#164b3e;margin:12px 0 16px;letter-spacing:-.04em}
+.fmv-brand-film-heading h2 em{font-style:normal;color:#13846f}
+.fmv-brand-film-heading p{color:#4c7064;font-size:clamp(14px,2vw,18px);line-height:1.65}
+.fmv-brand-film-frame{position:relative;overflow:hidden;aspect-ratio:16/9;max-width:1080px;margin:auto;border-radius:28px;border:7px solid #ffffff;box-shadow:0 24px 80px rgba(8,57,41,.17);background:linear-gradient(120deg,#134f46,#116e68 55%,#389a71)}
+.fmv-brand-film-video{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none;-webkit-user-select:none}
+.fmv-brand-film-video::-webkit-media-controls,.fmv-brand-film-video::-webkit-media-controls-start-playback-button{display:none!important}
+@media(max-width:650px){.fmv-brand-film{padding:55px 0}.fmv-brand-film-heading{margin-bottom:22px}.fmv-brand-film-frame{border-radius:17px;border-width:4px}}
+@media(prefers-reduced-motion:reduce){.fmv-brand-film-video{animation:none;transition:none}}
