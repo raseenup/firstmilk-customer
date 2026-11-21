@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img" aria-label="FARM BUTTER by First Milk Venture">
+<title>FARM BUTTER — First Milk Venture</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0c0"/><stop offset=".58" stop-color="#effbd2"/><stop offset="1" stop-color="#fff"/></linearGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="1" y2=".36"><stop stop-color="#fff" stop-opacity=".96"/><stop offset=".35" stop-color="#f8fffa"/><stop offset=".74" stop-color="#d2eee6"/><stop offset="1" stop-color="#fff"/></linearGradient>
+<linearGradient id="lid" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e7f9fe"/><stop offset=".35" stop-color="#dfa445"/><stop offset="1" stop-color="#034970"/></linearGradient>
+<linearGradient id="brand" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#074d9b"/><stop offset=".48" stop-color="#087f6d"/><stop offset="1" stop-color="#3cad54"/></linearGradient>
+<filter id="shadow" x="-40%" y="-40%" width="180%" height="200%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#064e55" flood-opacity=".2"/></filter>
+<radialGradient id="shine"><stop stop-color="#fff" stop-opacity=".72"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+</defs><rect width="800" height="800" fill="url(#bg)"/>
+<circle cx="676" cy="110" r="220" fill="url(#shine)"/><circle cx="80" cy="650" r="205" fill="#fff" opacity=".3"/>
+<path d="M0 660q240-55 410 15q194-78 390-4v129H0z" fill="#fff" opacity=".4"/>
+<g opacity=".32"><path d="M70 175q95-60 144 9-94 52-144-9Z" fill="#5bab81"/><path d="M608 227q72-91 136-30-62 88-136 30Z" fill="#66b89e"/></g>
+<g filter="url(#shadow)"><ellipse cx="407" cy="646" rx="240" ry="40" fill="#7b5a1b" opacity=".17"/><path d="M215 467l193-106 194 99-192 110z" fill="#fff4a6" stroke="#fff" stroke-width="5"/><path d="M215 467v110l195 94V570z" fill="#efbf45" stroke="#dfac37" stroke-width="5"/><path d="M410 570l192-110v110L410 671z" fill="#dda33b" stroke="#c68d29" stroke-width="5"/><path d="M254 432l155-83 124 67-152 88z" fill="#fff8c8" opacity=".9"/><path d="M252 337l172-75 182 83-173 83z" fill="#fafff7" stroke="#d3e9dd" stroke-width="5"/><path d="M252 337v96l182 89v-94z" fill="url(#brand)"/><path d="M434 428l172-83v92l-172 85z" fill="#0b7f71"/><text x="356" y="409" font-size="47" text-anchor="middle" fill="#fff" font-weight="900" transform="rotate(25 356 409)">FMV</text><path d="M453 284l76 35" stroke="#b9d9ce" stroke-width="6" opacity=".8"/><path d="M459 580l103-56" stroke="#fff1b3" stroke-width="9" opacity=".7"/></g>
+<g font-family="Arial,Helvetica,sans-serif"><rect x="60" y="65" width="420" height="72" rx="22" fill="#fff" fill-opacity=".90"/>
+<circle cx="99" cy="101" r="20" fill="#0c8a68"/><path d="M98 86q-23 31 0 32q24 0 0-32Z" fill="#fff"/>
+<text x="136" y="99" font-weight="900" font-size="21" fill="#0d5358">FIRST MILK VENTURE</text><text x="136" y="122" font-weight="700" font-size="13" letter-spacing="2" fill="#207e65">FRESH DAILY ESSENTIALS</text>
+<text x="400" y="745" text-anchor="middle" font-weight="900" font-size="36" letter-spacing="2" fill="#123d47">FARM BUTTER</text></g>
+</svg>

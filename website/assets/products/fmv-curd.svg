@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img" aria-label="FRESH CURD by First Milk Venture">
+<title>FRESH CURD — First Milk Venture</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe8d7"/><stop offset=".58" stop-color="#e9fcf0"/><stop offset="1" stop-color="#fff"/></linearGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="1" y2=".36"><stop stop-color="#fff" stop-opacity=".96"/><stop offset=".35" stop-color="#f8fffa"/><stop offset=".74" stop-color="#d2eee6"/><stop offset="1" stop-color="#fff"/></linearGradient>
+<linearGradient id="lid" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e7f9fe"/><stop offset=".35" stop-color="#4f9784"/><stop offset="1" stop-color="#034970"/></linearGradient>
+<linearGradient id="brand" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#074d9b"/><stop offset=".48" stop-color="#087f6d"/><stop offset="1" stop-color="#3cad54"/></linearGradient>
+<filter id="shadow" x="-40%" y="-40%" width="180%" height="200%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#064e55" flood-opacity=".2"/></filter>
+<radialGradient id="shine"><stop stop-color="#fff" stop-opacity=".72"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+</defs><rect width="800" height="800" fill="url(#bg)"/>
+<circle cx="676" cy="110" r="220" fill="url(#shine)"/><circle cx="80" cy="650" r="205" fill="#fff" opacity=".3"/>
+<path d="M0 660q240-55 410 15q194-78 390-4v129H0z" fill="#fff" opacity=".4"/>
+<g opacity=".32"><path d="M70 175q95-60 144 9-94 52-144-9Z" fill="#5bab81"/><path d="M608 227q72-91 136-30-62 88-136 30Z" fill="#66b89e"/></g>
+<g filter="url(#shadow)"><ellipse cx="397" cy="660" rx="224" ry="29" fill="#16504c" opacity=".12"/><path d="M180 330q30 291 53 309q166 54 335 0q39-126 54-309" fill="url(#glass)" stroke="#fff" stroke-width="7"/><ellipse cx="400" cy="325" rx="219" ry="64" fill="url(#lid)" stroke="#fff" stroke-width="8"/><ellipse cx="400" cy="315" rx="183" ry="39" fill="#f5fffc"/><path d="M220 420q180 28 361 0l-15 155q-170 40-335 0z" fill="url(#brand)"/><text x="402" y="499" font-size="53" text-anchor="middle" fill="#fff" font-weight="900">FMV</text><text x="402" y="526" font-size="15" text-anchor="middle" fill="#fff" font-weight="800">FIRST MILK VENTURE</text><ellipse cx="404" cy="280" rx="112" ry="23" fill="#fff" opacity=".86"/><path d="M290 280q75-52 147 0q-30 50-86 10" fill="#fff" stroke="#d0e5e2" stroke-width="5"/></g>
+<g font-family="Arial,Helvetica,sans-serif"><rect x="60" y="65" width="420" height="72" rx="22" fill="#fff" fill-opacity=".90"/>
+<circle cx="99" cy="101" r="20" fill="#0c8a68"/><path d="M98 86q-23 31 0 32q24 0 0-32Z" fill="#fff"/>
+<text x="136" y="99" font-weight="900" font-size="21" fill="#0d5358">FIRST MILK VENTURE</text><text x="136" y="122" font-weight="700" font-size="13" letter-spacing="2" fill="#207e65">FRESH DAILY ESSENTIALS</text>
+<text x="400" y="745" text-anchor="middle" font-weight="900" font-size="36" letter-spacing="2" fill="#123d47">FRESH CURD</text></g>
+</svg>
