@@ -1183,8 +1183,8 @@ function renderProducts(){
         </div>
       </div>
       <div class="fmv-buy-actions">
-        <button class="customer-add-button" ${p.stock_quantity<=0?'disabled':''} onclick="addToCart('${e(p.id)}')">Add to cart <span aria-hidden="true">+</span></button>
         <button class="customer-subscribe-button" aria-label="Make ${e(p.name)} a subscription" onclick="subscribeProduct('${e(p.id)}')">Subscribe ${customerArrowIcon()}</button>
+        <button class="customer-add-button" ${p.stock_quantity<=0?'disabled':''} onclick="addToCart('${e(p.id)}')">Add to cart <span aria-hidden="true">+</span></button>
       </div>
     </div>
   </article>`).join('') || customerEmpty('A fresh selection is on its way','No products are currently available. Please check back later.'));
