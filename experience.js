@@ -8,12 +8,13 @@
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
   let campaignMediaObserver=null;
   function activateCampaignVideo(video){
-    if(!video || document.hidden || motion.matches || video.closest('[hidden]'))return;
+    if(!video || document.hidden || video.closest('[hidden]'))return;
     if(!video.getAttribute('src') && video.dataset.fmvSrc){
       video.src=video.dataset.fmvSrc;
-      video.preload='auto';
+      video.preload=motion.matches?'metadata':'auto';
       video.load();
     }
+    if(motion.matches){video.pause();return;}
     if(video.getAttribute('src'))video.play().catch(()=>{});
   }
   function prepareCampaignVideos(){
