@@ -125,3 +125,11 @@
 .fmv-3d-card:hover .fmv-product-art,.fmv-3d-card:focus-within .fmv-product-art{transform:translate3d(0,-6px,0) scale(1.07) rotate(-2deg);filter:drop-shadow(6px 15px 13px #12384a46)}
 .fmv-3d-card .fmv-product-card-logo{transform:translateZ(10px)}
 @media(prefers-reduced-motion:reduce){.fmv-3d-card:hover .fmv-product-art,.fmv-3d-card:focus-within .fmv-product-art{transform:none}}
+
+/* Photorealistic uploaded product layers; lightweight transform, no live WebGL. */
+.fmv-cinema-product-photo{position:absolute;z-index:6;top:3%;left:6%;width:88%;height:88%;object-fit:contain;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none;filter:drop-shadow(9px 24px 18px rgba(1,12,22,.53));transform:translate3d(0,0,0);transition:opacity .28s ease}
+.fmv-cinema[data-hero-image="ready"] .fmv-cinema-product-photo{opacity:1}
+.fmv-cinema[data-hero-image="ready"] .fmv-3d-object{visibility:hidden}
+.fmv-cinema[data-hero-image="ready"] .fmv-3d-float{animation:none}
+.fmv-cinema-product-photo::-webkit-media-controls,.fmv-cinema-product-photo::-webkit-media-controls-start-playback-button{display:none!important}
+@media(prefers-reduced-motion:reduce){.fmv-cinema-product-photo{transition:none}}
