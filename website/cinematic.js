@@ -23,6 +23,20 @@
   // Approved published media ID paths only. Never load arbitrary editor-supplied URLs.
   const MEDIA_PATTERN = /^\/media\/campaign\/MEDIA-[A-Za-z0-9_-]{8,100}$/;
   const IMAGE_TYPES = new Set(['image/jpeg','image/png','image/webp']);
+  // Bundled WebP images load from the website's own origin, without
+  // extra API requests or third-party CDNs. Admin-approved CMS media wins.
+  const builtIn = Object.freeze({
+    milk:'assets/products/hero-milk-900.webp',
+    ghee:'assets/products/hero-ghee-900.webp',
+    curd:'assets/products/hero-curd-900.webp',
+    butter:'assets/products/hero-butter-900.webp'
+  });
+  const builtInSmall = Object.freeze({
+    milk:'assets/products/hero-milk-600.webp',
+    ghee:'assets/products/hero-ghee-600.webp',
+    curd:'assets/products/hero-curd-600.webp',
+    butter:'assets/products/hero-butter-600.webp'
+  });
   // The existing CMS supplies its API origin. This module makes no API requests.
   let approvedMediaOrigin = '';
   let productImages = {}, globalArtwork = null, activeVisual = null, activeVisualPath = '';
@@ -31,8 +45,10 @@
     ? approvedMediaOrigin + value : '';
   function showProductArtwork(key) {
     const sceneVisual = productImages[key] || globalArtwork;
-    const path = sceneVisual ? mediaUrl(sceneVisual.url) : '';
-    const video = sceneVisual?.mime_type === 'video/mp4';
+    const published = sceneVisual ? mediaUrl(sceneVisual.url) : '';
+    const path = published || builtIn[key] || '';
+    const video = Boolean(published && sceneVisual?.mime_type === 'video/mp4');
+    const local = !published;
     if (activeVisualPath === path && activeVisual && stage.dataset.product === key) return;
     const generation = ++visualGeneration;
     activeVisualPath = path;
@@ -49,6 +65,10 @@
     } else {
       asset.alt = ''; asset.decoding = 'async'; asset.loading = 'eager';
       asset.fetchPriority = key === 'milk' ? 'high' : 'auto';
+      if (local && builtInSmall[key]) {
+        asset.srcset = builtInSmall[key] + ' 600w, ' + builtIn[key] + ' 900w';
+        asset.sizes = '(max-width: 650px) 84vw, 500px';
+      }
     }
     const ready = () => {
       if (generation !== visualGeneration || activeVisual !== asset) return;

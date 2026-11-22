@@ -133,3 +133,11 @@
 .fmv-cinema[data-hero-image="ready"] .fmv-3d-float{animation:none}
 .fmv-cinema-product-photo::-webkit-media-controls,.fmv-cinema-product-photo::-webkit-media-controls-start-playback-button{display:none!important}
 @media(prefers-reduced-motion:reduce){.fmv-cinema-product-photo{transition:none}}
+
+/* Website-hosted, high-resolution FMV package photography. */
+.fmv-cinema-product-photo{
+  -webkit-mask-image:radial-gradient(ellipse 72% 77% at 50% 51%,#000 66%,transparent 100%);
+  mask-image:radial-gradient(ellipse 72% 77% at 50% 51%,#000 66%,transparent 100%);
+}
+.fmv-3d-card .product-illustration{background:linear-gradient(120deg,#06172b,#153b53)}
+.fmv-3d-card .product-illustration .fmv-product-art{object-fit:contain;background:transparent}

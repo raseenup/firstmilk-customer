@@ -58,3 +58,13 @@ test('3D presentation has small dependency-free self-hosted assets and safety fa
   assert.equal((page.match(/class="fmv-3d-card"/g)||[]).length,0); // cards include other classes
   assert.equal((page.match(/fmv-3d-card" data-fmv-card=/g)||[]).length,4);
 });
+
+test('all four optimized, self-hosted product photos are referenced, with originals available as fallbacks',()=>{
+  for (const key of ['milk','ghee','curd','butter']) {
+    assert.match(page,new RegExp('assets/products/hero-'+key+'-900\\.webp'));
+    assert.match(page,new RegExp('assets/products/hero-'+key+'-600\\.webp'));
+    assert.match(js,new RegExp('hero-'+key+'-900\\.webp'));
+  }
+  assert.match(js,/const published = sceneVisual/);
+  assert.match(js,/const path = published \|\| builtIn\[key\]/);
+});
