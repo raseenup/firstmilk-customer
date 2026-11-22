@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="chat.css?v=20261122-mobile-ui">
   <link rel="stylesheet" href="brand.css">
   <link rel="stylesheet" href="cinematic.css?v=20261122-product-photos">
-  <script defer src="site.js?v=20261122-perf-pass"></script>
+  <script defer src="site.js?v=20261122-autoplay-film"></script>
   <script defer src="cinematic.js?v=20261122-product-photos"></script>
   <script defer src="cms.js"></script>
   <script defer src="chat.js"></script>
@@ -145,19 +145,14 @@
         </div>
         <div class="fmv-brand-film-frame">
           <video id="fmv-film-video" class="fmv-brand-film-video"
-                 data-src="assets/video/fmv-brand-film-720.mp4"
-                 data-mobile-src="assets/video/fmv-brand-film-mobile.mp4"
                  poster="assets/video/fmv-film-poster.webp"
                  muted autoplay loop playsinline webkit-playsinline
-                 preload="none" disablepictureinpicture disableremoteplayback
+                 preload="auto" disablepictureinpicture disableremoteplayback
                  aria-label="First Milk Venture cinematic dairy promotional video">
+            <source src="assets/video/fmv-brand-film-mobile.mp4" type="video/mp4" media="(max-width:650px)">
+            <source src="assets/video/fmv-brand-film-720.mp4" type="video/mp4">
             Your browser cannot display this promotional video.
           </video>
-          <noscript><a class="text-link" href="assets/video/fmv-brand-film-mobile.mp4">Watch the First Milk Venture company film</a></noscript>
-          <button id="fmv-film-retry" class="fmv-film-retry" type="button"
-                  aria-label="Play First Milk Venture company film" hidden>
-            <span aria-hidden="true">▶</span> Play company film
-          </button>
         </div>
       </div>
     </section>
