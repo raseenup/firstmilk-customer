@@ -26,3 +26,10 @@
 .fmv-ai-support{font-size:12px;font-weight:750;color:#076a52;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:380px){.fmv-ai-widget{right:10px;bottom:calc(10px + env(safe-area-inset-bottom))}.fmv-ai-bubble{width:52px;height:52px}.fmv-ai-panel{padding:12px;gap:9px}}
 @media(prefers-reduced-motion:reduce){.fmv-ai-bubble{transition:none}}
+
+/* Mobile FAB should be discreet and keep more of the product-picker visible. */
+@media(max-width:650px){
+ .fmv-ai-widget{right:10px;bottom:calc(12px + env(safe-area-inset-bottom))}
+ .fmv-ai-bubble{width:46px;height:46px}
+ .fmv-ai-bubble .fmv-ai-brand-icon{width:33px;height:33px}
+}
