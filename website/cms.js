@@ -47,7 +47,11 @@
     }
     if(!isCareers){
       const hero=document.querySelector('.hero-visual'),url=imageURL(site.media_url);
-      if(hero && url){
+      if(hero?.classList.contains('fmv-cinema')){
+        // Do not replace the whole interactive stage with the legacy hero image.
+        // Preserve the product picker, title, pricing navigation and all fallbacks.
+        window.FMVHeroMedia?.(site.hero_product_images || {}, {url:site.media_url,type:site.media_type},api);
+      }else if(hero && url){
         let media=hero.querySelector('.fmv-site-hero-media');
         if(!media){
           media=document.createElement(site.media_type==='video/mp4'?'video':'img');

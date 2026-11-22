@@ -342,3 +342,16 @@ h1 em,h2 em{font-style:normal;color:#26856b}
 .fmv-brand-film-video::-webkit-media-controls,.fmv-brand-film-video::-webkit-media-controls-start-playback-button{display:none!important}
 @media(max-width:650px){.fmv-brand-film{padding:55px 0}.fmv-brand-film-heading{margin-bottom:22px}.fmv-brand-film-frame{border-radius:17px;border-width:4px}}
 @media(prefers-reduced-motion:reduce){.fmv-brand-film-video{animation:none;transition:none}}
+
+/* A single-row mobile header prevents the overflowing CTA/menu wrap shown on iPhone. */
+@media(max-width:650px){
+ .site-header .header-inner{min-height:70px;flex-wrap:nowrap;gap:12px}
+ .site-header .brand{margin-right:auto;max-width:calc(100% - 60px);min-width:0}
+ .site-header .brand-type{min-width:0}
+ .site-header .brand-type strong{white-space:nowrap}
+ .site-header .menu-toggle{order:2;flex:0 0 41px;cursor:pointer}
+ .site-header .account-links{display:none}
+ .site-header .nav{position:absolute;left:0;right:0;top:100%;padding:12px 20px 18px;
+   border-top:1px solid #e0e9df;background:#fffdf9;box-shadow:0 18px 30px #10382b22}
+ .site-header .nav.nav-open{display:flex}
+}
