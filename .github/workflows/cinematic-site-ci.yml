@@ -1,0 +1,34 @@
+name: Cinematic marketing website checks
+on:
+  push:
+    branches:
+      - feature/animated-company-website-20261118
+    paths:
+      - 'website/**'
+      - '.github/workflows/cinematic-site-ci.yml'
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/workflows/cinematic-site-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cinematic-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check self-hosted JavaScript
+        run: |
+          node --check website/site.js
+          node --check website/cinematic.js
+          node --check website/chat.js
+          node --check website/cms.js
+      - name: Install DOM test environment
+        run: npm install --no-save --ignore-scripts jsdom@27.2.0
+      - name: Check cinematic UX and marketing assistant
+        run: node --test website/tests/cinematic.test.cjs website/tests/chat.test.cjs
