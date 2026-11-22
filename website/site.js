@@ -49,68 +49,97 @@
     revealElements.forEach(element => observer.observe(element));
   }
 
-  // Serve the original company film from our own domain. Lazy-load MP4 only
-  // when it approaches the viewport, and show the poster while decoding.
+  // Brand video: optimized MP4 loads only near the viewport. Pause offscreen
+  // or when the page is hidden so the looping film does not waste mobile CPU,
+  // GPU, battery or data. Keep its lightweight WebP poster visible.
   const brandFilm=document.getElementById('fmv-film-video');
   if(brandFilm){
     const frame=brandFilm.closest('.fmv-brand-film-frame');
     const retryButton=document.getElementById('fmv-film-retry');
-    const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
+    const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true;
+    const saveData=navigator.connection?.saveData===true;
     const mobileSource=brandFilm.getAttribute('data-mobile-src');
     const desktopSource=brandFilm.getAttribute('data-src');
     const validLocalSource=value=>typeof value==='string'&&
       /^assets\/video\/fmv-brand-film-(?:720|mobile)\.mp4$/.test(value);
-    const smallScreen=window.matchMedia?.('(max-width:650px)').matches===true;
+    const smallScreen=window.matchMedia?.('(max-width:650px)')?.matches===true;
     const source=smallScreen&&validLocalSource(mobileSource)?mobileSource:desktopSource;
-    let activated=false;
+    let activated=false, inViewport=false, manuallyStarted=false;
     function showRetry(){if(retryButton)retryButton.hidden=false;}
     function hideRetry(){if(retryButton)retryButton.hidden=true;}
-    function playFilm(){
-      brandFilm.muted=true;
-      brandFilm.defaultMuted=true;
-      brandFilm.playsInline=true;
-      brandFilm.controls=false;
-      const pending=brandFilm.play();
-      if(pending&&typeof pending.catch==='function')pending.then(hideRetry,showRetry);
-    }
     function activateBrandFilm(){
       if(activated||!validLocalSource(source))return;
       activated=true;
       brandFilm.src=source;
-      brandFilm.preload='auto';
+      brandFilm.preload='metadata';
+      brandFilm.muted=true;
+      brandFilm.defaultMuted=true;
+      brandFilm.playsInline=true;
+      brandFilm.controls=false;
       brandFilm.load();
-      if(!reducedMotion)playFilm();
-      else showRetry();
+    }
+    function tryPlay(userInitiated=false){
+      if(!inViewport||document.hidden)return;
+      if((reducedMotion||saveData)&&!manuallyStarted&&!userInitiated){
+        showRetry();return;
+      }
+      if(!activated)activateBrandFilm();
+      if(!activated){showRetry();return;}
+      if(userInitiated)manuallyStarted=true;
+      brandFilm.muted=true;
+      brandFilm.playsInline=true;
+      brandFilm.controls=false;
+      if(!brandFilm.paused){hideRetry();return;}
+      try{
+        const pending=brandFilm.play();
+        if(pending&&typeof pending.catch==='function'){
+          pending.then(()=>{
+            if(inViewport&&!document.hidden)hideRetry();
+          },()=>{
+            if(inViewport&&!document.hidden)showRetry();
+          });
+        }
+      }catch(error){showRetry();}
     }
     brandFilm.addEventListener('playing',()=>{
       frame?.classList.add('fmv-film-playing');hideRetry();
     });
     brandFilm.addEventListener('pause',()=>{
       frame?.classList.remove('fmv-film-playing');
-      if(!document.hidden&&!brandFilm.ended)showRetry();
+      if(inViewport&&!document.hidden&&!brandFilm.ended)showRetry();
     });
     brandFilm.addEventListener('error',()=>{
-      frame?.classList.remove('fmv-film-playing');showRetry();
+      frame?.classList.remove('fmv-film-playing');
+      if(inViewport&&!document.hidden)showRetry();
     });
     if(retryButton){
-      retryButton.addEventListener('click',()=>{
-        if(!activated)activateBrandFilm();
-        playFilm();
-      });
+      retryButton.addEventListener('click',()=>tryPlay(true));
+    }
+    function onVisibilityChange(visible){
+      inViewport=visible;
+      if(!visible||document.hidden){
+        if(activated&&!brandFilm.paused)brandFilm.pause();
+        hideRetry();
+      }else{
+        activateBrandFilm();
+        tryPlay();
+      }
     }
     if('IntersectionObserver' in window){
-      const observer=new IntersectionObserver(entries=>{
-        if(entries.some(entry=>entry.isIntersecting)){
-          activateBrandFilm();observer.disconnect();
-        }
-      },{rootMargin:'250px 0px'});
-      observer.observe(brandFilm);
-    }else activateBrandFilm();
+      const filmObserver=new IntersectionObserver(entries=>{
+        const entry=entries.find(item=>item.target===brandFilm);
+        if(entry)onVisibilityChange(entry.isIntersecting);
+      },{rootMargin:'220px 0px',threshold:0});
+      filmObserver.observe(brandFilm);
+    }else onVisibilityChange(true);
     document.addEventListener('visibilitychange',()=>{
-      if(!document.hidden&&activated&&!reducedMotion&&brandFilm.paused)playFilm();
+      if(document.hidden){
+        if(activated&&!brandFilm.paused)brandFilm.pause();
+        hideRetry();
+      }else if(inViewport)tryPlay();
     });
     window.addEventListener('pageshow',()=>{
-      if(activated&&!reducedMotion&&brandFilm.paused)playFilm();
+      if(inViewport)tryPlay();
     });
   }
 
