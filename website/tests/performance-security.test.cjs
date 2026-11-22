@@ -49,14 +49,15 @@ test('optimized WebP images and branded MP4s stay within static resource budgets
   assert.ok(readStat('assets/video/fmv-film-poster.webp')<100000);
 });
 
-test('company film avoids network and CPU work when out of view',()=>{
+test('company film starts immediately without requiring a tap while retaining a poster fallback',()=>{
   assert.match(siteJS,/IntersectionObserver/);
-  assert.match(siteJS,/brandFilm\.pause\(\)/);
+  assert.match(siteJS,/brandFilm\.play\(\)/);
+  assert.match(siteJS,/startFilm\(\);/);
   assert.match(siteJS,/document\.hidden/);
-  assert.match(siteJS,/connection\?\.saveData/);
-  assert.match(siteJS,/prefers-reduced-motion/);
+  assert.ok(page.includes('preload="auto"'));
+  assert.ok(page.includes('muted autoplay loop playsinline'));
   assert.ok(page.includes('poster="assets/video/fmv-film-poster.webp"'));
-  assert.ok(page.includes('id="fmv-film-retry"'));
+  assert.ok(!page.includes('id="fmv-film-retry"'));
   assert.ok(!page.includes('resource2.heygen.ai'));
 });
 
