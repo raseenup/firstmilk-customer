@@ -49,98 +49,51 @@
     revealElements.forEach(element => observer.observe(element));
   }
 
-  // Brand video: optimized MP4 loads only near the viewport. Pause offscreen
-  // or when the page is hidden so the looping film does not waste mobile CPU,
-  // GPU, battery or data. Keep its lightweight WebP poster visible.
+  // The company's own fast-start MP4 is ready to load immediately. iOS
+  // requires muted + playsInline to permit autoplay without a tap. Never show
+  // a play button or browser video controls. Poster remains if a browser blocks
+  // autoplay (e.g., Low Power Mode).
   const brandFilm=document.getElementById('fmv-film-video');
   if(brandFilm){
     const frame=brandFilm.closest('.fmv-brand-film-frame');
-    const retryButton=document.getElementById('fmv-film-retry');
-    const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true;
-    const saveData=navigator.connection?.saveData===true;
-    const mobileSource=brandFilm.getAttribute('data-mobile-src');
-    const desktopSource=brandFilm.getAttribute('data-src');
-    const validLocalSource=value=>typeof value==='string'&&
-      /^assets\/video\/fmv-brand-film-(?:720|mobile)\.mp4$/.test(value);
-    const smallScreen=window.matchMedia?.('(max-width:650px)')?.matches===true;
-    const source=smallScreen&&validLocalSource(mobileSource)?mobileSource:desktopSource;
-    let activated=false, inViewport=false, manuallyStarted=false;
-    function showRetry(){if(retryButton)retryButton.hidden=false;}
-    function hideRetry(){if(retryButton)retryButton.hidden=true;}
-    function activateBrandFilm(){
-      if(activated||!validLocalSource(source))return;
-      activated=true;
-      brandFilm.src=source;
-      brandFilm.preload='metadata';
-      brandFilm.muted=true;
-      brandFilm.defaultMuted=true;
-      brandFilm.playsInline=true;
-      brandFilm.controls=false;
-      brandFilm.load();
-    }
-    function tryPlay(userInitiated=false){
-      if(!inViewport||document.hidden)return;
-      if((reducedMotion||saveData)&&!manuallyStarted&&!userInitiated){
-        showRetry();return;
-      }
-      if(!activated)activateBrandFilm();
-      if(!activated){showRetry();return;}
-      if(userInitiated)manuallyStarted=true;
-      brandFilm.muted=true;
-      brandFilm.playsInline=true;
-      brandFilm.controls=false;
-      if(!brandFilm.paused){hideRetry();return;}
+    brandFilm.muted=true;
+    brandFilm.defaultMuted=true;
+    brandFilm.autoplay=true;
+    brandFilm.loop=true;
+    brandFilm.playsInline=true;
+    brandFilm.controls=false;
+    let playPending=false;
+    const startFilm=()=>{
+      if(document.hidden||!brandFilm.paused||playPending)return;
       try{
-        const pending=brandFilm.play();
-        if(pending&&typeof pending.catch==='function'){
-          pending.then(()=>{
-            if(inViewport&&!document.hidden)hideRetry();
-          },()=>{
-            if(inViewport&&!document.hidden)showRetry();
-          });
+        brandFilm.muted=true;
+        const attempt=brandFilm.play();
+        if(attempt&&typeof attempt.then==='function'){
+          playPending=true;
+          attempt.then(()=>{playPending=false;},()=>{playPending=false;});
         }
-      }catch(error){showRetry();}
-    }
-    brandFilm.addEventListener('playing',()=>{
-      frame?.classList.add('fmv-film-playing');hideRetry();
-    });
-    brandFilm.addEventListener('pause',()=>{
-      frame?.classList.remove('fmv-film-playing');
-      if(inViewport&&!document.hidden&&!brandFilm.ended)showRetry();
-    });
-    brandFilm.addEventListener('error',()=>{
-      frame?.classList.remove('fmv-film-playing');
-      if(inViewport&&!document.hidden)showRetry();
-    });
-    if(retryButton){
-      retryButton.addEventListener('click',()=>tryPlay(true));
-    }
-    function onVisibilityChange(visible){
-      inViewport=visible;
-      if(!visible||document.hidden){
-        if(activated&&!brandFilm.paused)brandFilm.pause();
-        hideRetry();
-      }else{
-        activateBrandFilm();
-        tryPlay();
+      }catch{
+        // Browser policy may disallow autoplay; keep the original poster.
       }
-    }
-    if('IntersectionObserver' in window){
-      const filmObserver=new IntersectionObserver(entries=>{
-        const entry=entries.find(item=>item.target===brandFilm);
-        if(entry)onVisibilityChange(entry.isIntersecting);
-      },{rootMargin:'220px 0px',threshold:0});
-      filmObserver.observe(brandFilm);
-    }else onVisibilityChange(true);
+    };
+    brandFilm.addEventListener('playing',()=>frame?.classList.add('fmv-film-playing'));
+    brandFilm.addEventListener('pause',()=>frame?.classList.remove('fmv-film-playing'));
+    brandFilm.addEventListener('loadeddata',startFilm,{once:true});
+    brandFilm.addEventListener('canplay',startFilm,{once:true});
     document.addEventListener('visibilitychange',()=>{
       if(document.hidden){
-        if(activated&&!brandFilm.paused)brandFilm.pause();
-        hideRetry();
-      }else if(inViewport)tryPlay();
+        if(!brandFilm.paused)brandFilm.pause();
+      }else startFilm();
     });
-    window.addEventListener('pageshow',()=>{
-      if(inViewport)tryPlay();
-    });
+    window.addEventListener('pageshow',startFilm);
+    // Safari can pause offscreen autoplay; re-attempt when the film is in view.
+    if('IntersectionObserver' in window){
+      const observer=new IntersectionObserver(entries=>{
+        if(entries.some(entry=>entry.isIntersecting))startFilm();
+      },{rootMargin:'200px 0px'});
+      observer.observe(brandFilm);
+    }
+    startFilm();
   }
 
   // Email contact avoids introducing an unaudited public API or storing user data.
