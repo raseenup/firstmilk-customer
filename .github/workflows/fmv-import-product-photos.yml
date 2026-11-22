@@ -1,0 +1,58 @@
+name: Import approved FMV dairy photos
+on:
+  push:
+    branches:
+      - feature/fmv-realistic-product-assets-20261122
+    paths:
+      - .github/workflows/fmv-import-product-photos.yml
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out current website source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download approved First Milk Venture images
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p website/assets/products
+          curl -fLSs --retry 3 --max-time 90 --proto '=https' --tlsv1.2 'https://dynamic.heygen.ai/image/eb78ff30adb341fe831c1a1258e7801f/original.webp' -o website/assets/products/hero-milk-900.webp
+          curl -fLSs --retry 3 --max-time 90 --proto '=https' --tlsv1.2 'https://dynamic.heygen.ai/image/60291e40f7564cddbedc180628a22f1b/original.webp' -o website/assets/products/hero-ghee-900.webp
+          curl -fLSs --retry 3 --max-time 90 --proto '=https' --tlsv1.2 'https://dynamic.heygen.ai/image/17e0a8aa989b4ae0830ca32b64b3968f/original.webp' -o website/assets/products/hero-curd-900.webp
+          curl -fLSs --retry 3 --max-time 90 --proto '=https' --tlsv1.2 'https://dynamic.heygen.ai/image/8560b9f4b23e45e68dd037d91b09d67c/original.webp' -o website/assets/products/hero-butter-900.webp
+          cat <<'HASHES' | sha256sum --check
+          a73a60ba73d6386e7928d97cb8a5f407c48c07e4d75fd62795edacabc9e2fb39  website/assets/products/hero-milk-900.webp
+          a2c62b742f5ffa8bd919ca0d6dae70f014e345d9c2fd3cb246e46ce1b1986896  website/assets/products/hero-ghee-900.webp
+          d3234465d06ca72797f2732307d819552ece77d942170324f2fe59c6f7a7b828  website/assets/products/hero-curd-900.webp
+          03897780cbf699c280ffe981dbb226edf6a65c12e12c9eafc1cd0a100066740a  website/assets/products/hero-butter-900.webp
+          HASHES
+      - name: Optimize mobile variants using Pillow
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check 'Pillow>=10.4,<12'
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          folder=Path('website/assets/products')
+          for name in ('milk','ghee','curd','butter'):
+              full=folder/f'hero-{name}-900.webp'
+              with Image.open(full) as pic:
+                  assert pic.format=='WEBP' and max(pic.size)<=2000
+                  pic.thumbnail((600,900),Image.Resampling.LANCZOS)
+                  pic.save(folder/f'hero-{name}-600.webp','WEBP',quality=74,method=6)
+          PY
+      - name: Save durable website-hosted files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add website/assets/products/hero-*.webp
+          git diff --cached --quiet && exit 0
+          git commit -m 'Import four optimized, self-hosted FMV product photos'
+          git push origin HEAD:feature/fmv-realistic-product-assets-20261122
