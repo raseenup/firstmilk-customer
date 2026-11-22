@@ -73,7 +73,7 @@
     }
     productImages = approved;
     globalArtwork = fallback && mediaUrl(fallback.url) &&
-      (IMAGE_TYPES.has(fallback.type) || fallback.type === 'video/mp4')
+      (IMAGE_TYPES.has(fallback.type) || fallback.type === 'image/gif' || fallback.type === 'video/mp4')
       ? {url:fallback.url,mime_type:fallback.type} : null;
     // Reset only when media source or selected product changes.
     showProductArtwork(stage.dataset.product || 'milk');
