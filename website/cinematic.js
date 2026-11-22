@@ -23,10 +23,12 @@
   // Approved published media ID paths only. Never load arbitrary editor-supplied URLs.
   const MEDIA_PATTERN = /^\/media\/campaign\/MEDIA-[A-Za-z0-9_-]{8,100}$/;
   const IMAGE_TYPES = new Set(['image/jpeg','image/png','image/webp']);
-  const API_ORIGIN = 'https://backend.firstmilkventure.com';
+  // The existing CMS supplies its API origin. This module makes no API requests.
+  let approvedMediaOrigin = '';
   let productImages = {}, globalArtwork = null, activeVisual = null, activeVisualPath = '';
   let visualGeneration = 0;
-  const mediaUrl = value => typeof value === 'string' && MEDIA_PATTERN.test(value) ? API_ORIGIN + value : '';
+  const mediaUrl = value => typeof value === 'string' && MEDIA_PATTERN.test(value) && approvedMediaOrigin
+    ? approvedMediaOrigin + value : '';
   function showProductArtwork(key) {
     const sceneVisual = productImages[key] || globalArtwork;
     const path = sceneVisual ? mediaUrl(sceneVisual.url) : '';
@@ -65,7 +67,13 @@
     if (video) asset.play().catch(() => {});
   }
   // The CMS calls this after using its safe, public content endpoint.
-  window.FMVHeroMedia = (entries={}, fallback={}) => {
+  window.FMVHeroMedia = (entries={}, fallback={}, origin='') => {
+    // Accept only the exact company media host and HTTPS; refuse arbitrary origins.
+    try {
+      const address = new URL(origin);
+      approvedMediaOrigin = address.protocol === 'https:' && address.hostname === 'backend.firstmilkventure.com'
+        && !address.port && !address.username && !address.password ? address.origin : '';
+    } catch { approvedMediaOrigin = ''; }
     const approved = {};
     for (const key of ['milk','ghee','curd','butter']) {
       const item = entries && typeof entries === 'object' ? entries[key] : null;
