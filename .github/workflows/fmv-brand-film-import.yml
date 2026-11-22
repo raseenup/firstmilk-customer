@@ -1,0 +1,70 @@
+name: Import the existing First Milk Venture brand film
+on:
+  push:
+    branches:
+      - feature/restore-brand-film-20261122
+    paths:
+      - .github/workflows/fmv-brand-film-import.yml
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check out review branch
+        uses: actions/checkout@v4
+      - name: Download the existing video from its FMV HeyGen asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p website/assets/video
+          curl --fail --location --silent --show-error --retry 3 --retry-delay 2 \
+            --max-time 170 --max-filesize 500000000 \
+            --proto '=https' --tlsv1.2 \
+            'https://resource2.heygen.ai/video/b39f99f1f75a4a9185c173ad2f382cce/original.mp4' \
+            --output /tmp/fmv-original.mp4
+          ffprobe -v error -show_entries format=format_name,duration -of json /tmp/fmv-original.mp4
+          ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height -of json /tmp/fmv-original.mp4
+      - name: Make fast-starting, small mobile and desktop streams with no unnecessary audio
+        shell: bash
+        run: |
+          set -euo pipefail
+          ffmpeg -hide_banner -nostdin -loglevel error -y -i /tmp/fmv-original.mp4 \
+            -an -vf 'scale=w=min(1280\,iw):h=-2,fps=24' \
+            -c:v libx264 -profile:v main -level 4.0 -pix_fmt yuv420p \
+            -preset medium -crf 25 -movflags +faststart \
+            website/assets/video/fmv-brand-film-720.mp4
+          ffmpeg -hide_banner -nostdin -loglevel error -y -i /tmp/fmv-original.mp4 \
+            -an -vf 'scale=w=min(960\,iw):h=-2,fps=24' \
+            -c:v libx264 -profile:v main -level 4.0 -pix_fmt yuv420p \
+            -preset medium -crf 28 -movflags +faststart \
+            website/assets/video/fmv-brand-film-mobile.mp4
+          ffmpeg -hide_banner -nostdin -loglevel error -y -ss 00:00:01 \
+            -i /tmp/fmv-original.mp4 -frames:v 1 -vf 'scale=w=min(960\,iw):h=-2' \
+            /tmp/fmv-film-frame.png
+          python -m pip install --disable-pip-version-check 'Pillow>=10.4,<12'
+          python - <<'PY'
+          from PIL import Image
+          with Image.open('/tmp/fmv-film-frame.png') as img:
+              img.convert('RGB').save('website/assets/video/fmv-film-poster.webp','WEBP',quality=80,method=6)
+          PY
+          python - <<'PY'
+          import os, subprocess
+          for file in ('website/assets/video/fmv-brand-film-720.mp4','website/assets/video/fmv-brand-film-mobile.mp4'):
+              size=os.stat(file).st_size
+              assert 50000 < size < 80_000_000, (file,size)
+              info=subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',file],text=True).strip()
+              print(file,round(size/1_000_000,2),'MB',info,'seconds')
+          assert os.stat('website/assets/video/fmv-film-poster.webp').st_size > 10000
+          PY
+      - name: Commit only optimized same-origin media (not original)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add website/assets/video/fmv-*.mp4 website/assets/video/fmv-film-poster.webp
+          git diff --cached --quiet && exit 0
+          git commit -m "Import compressed First Milk Venture brand film and poster"
+          git push origin HEAD:feature/restore-brand-film-20261122
