@@ -7,6 +7,7 @@ on:
       - 'tests/**/*.cjs'
       - 'index.html'
       - 'product-information.css'
+      - 'website/**'
       - '.github/workflows/portal-features-ci.yml'
   pull_request:
     paths:
@@ -36,9 +37,11 @@ jobs:
           node --check 'customer-features.js'
           node --check 'orders.js'
           node --check 'website/cms.js'
+          node --check 'website/site.js'
+          node --check 'website/cinematic.js'
           node --check 'website/chat.js'
 
       - name: Install browser-test dependencies
         run: npm install --no-save jsdom@27.2.0
       - name: Run shared portal browser tests
-        run: node --test tests/official-brand.test.cjs tests/return-quality-ui.test.cjs tests/return-collection-ui.test.cjs tests/portal-core.test.cjs tests/returned-orders.test.cjs tests/product-information-ux.test.cjs website/tests/chat.test.cjs
+        run: node --test tests/official-brand.test.cjs tests/return-quality-ui.test.cjs tests/return-collection-ui.test.cjs tests/portal-core.test.cjs tests/returned-orders.test.cjs tests/product-information-ux.test.cjs website/tests/chat.test.cjs website/tests/cinematic.test.cjs
