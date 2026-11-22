@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#103f36">
   <meta name="description" content="First Milk Venture brings a little freshness to everyday life. Explore dairy essentials, simple subscriptions and convenient deliveries.">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: https://backend.firstmilkventure.com; media-src 'self' https://backend.firstmilkventure.com https://resource2.heygen.ai; connect-src 'self' https://backend.firstmilkventure.com; frame-src 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: https://backend.firstmilkventure.com; media-src 'self' https://backend.firstmilkventure.com; connect-src 'self' https://backend.firstmilkventure.com; frame-src 'none'; form-action 'none'; upgrade-insecure-requests">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.firstmilkventure.com/">
   <link rel="canonical" href="https://www.firstmilkventure.com/">
@@ -27,7 +27,7 @@
   <link rel="stylesheet" href="chat.css?v=20261122-mobile-ui">
   <link rel="stylesheet" href="brand.css">
   <link rel="stylesheet" href="cinematic.css?v=20261122-product-photos">
-  <script defer src="site.js"></script>
+  <script defer src="site.js?v=20261122-film-restore"></script>
   <script defer src="cinematic.js?v=20261122-product-photos"></script>
   <script defer src="cms.js"></script>
   <script defer src="chat.js"></script>
@@ -140,12 +140,18 @@
         </div>
         <div class="fmv-brand-film-frame">
           <video id="fmv-film-video" class="fmv-brand-film-video"
-                 data-src="https://resource2.heygen.ai/video/b39f99f1f75a4a9185c173ad2f382cce/original.mp4"
+                 data-src="assets/video/fmv-brand-film-720.mp4"
+                 data-mobile-src="assets/video/fmv-brand-film-mobile.mp4"
+                 poster="assets/video/fmv-film-poster.webp"
                  muted autoplay loop playsinline webkit-playsinline
                  preload="none" disablepictureinpicture disableremoteplayback
                  aria-label="First Milk Venture cinematic dairy promotional video">
             Your browser cannot display this promotional video.
           </video>
+          <button id="fmv-film-retry" class="fmv-film-retry" type="button"
+                  aria-label="Play First Milk Venture company film" hidden>
+            <span aria-hidden="true">▶</span> Play company film
+          </button>
         </div>
       </div>
     </section>

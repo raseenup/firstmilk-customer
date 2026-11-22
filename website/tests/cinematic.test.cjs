@@ -68,3 +68,15 @@ test('all four optimized, self-hosted product photos are referenced, with origin
   assert.match(js,/const published = sceneVisual/);
   assert.match(js,/const path = published \|\| builtIn\[key\]/);
 });
+
+test('existing cinematic company film remains present, with local fast-start media and poster',()=>{
+  assert.ok(page.includes('id="fmv-film-video"'));
+  assert.ok(page.includes('data-src="assets/video/fmv-brand-film-720.mp4"'));
+  assert.ok(page.includes('data-mobile-src="assets/video/fmv-brand-film-mobile.mp4"'));
+  assert.ok(page.includes('poster="assets/video/fmv-film-poster.webp"'));
+  assert.ok(page.includes('id="fmv-film-retry"'));
+  assert.ok(page.includes('muted autoplay loop playsinline'));
+  for(const product of ['ghee','curd','butter']){
+    assert.ok(page.includes('assets/products/hero-'+product+'-900.webp'));
+  }
+});
