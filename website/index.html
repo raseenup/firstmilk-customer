@@ -26,7 +26,9 @@
   <link rel="stylesheet" href="cms.css">
   <link rel="stylesheet" href="chat.css">
   <link rel="stylesheet" href="brand.css">
+  <link rel="stylesheet" href="cinematic.css?v=20261122-3d-v1">
   <script defer src="site.js"></script>
+  <script defer src="cinematic.js?v=20261122-3d-v1"></script>
   <script defer src="cms.js"></script>
   <script defer src="chat.js"></script>
 </head>
@@ -77,33 +79,49 @@
             <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg> Easy ordering</span>
           </div>
         </div>
-        <div class="hero-visual reveal" aria-label="Illustration of a fresh dairy bottle surrounded by leaves and sunny colours">
-          <div class="hero-circle"></div>
-          <div class="blob blob-lime"></div><div class="blob blob-peach"></div>
-          <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
-          <span class="spark spark-a" aria-hidden="true">✳</span><span class="spark spark-b" aria-hidden="true">✦</span><span class="spark spark-c" aria-hidden="true">✧</span>
-          <svg class="bottle-art" viewBox="0 0 430 500" fill="none" aria-hidden="true">
-            <ellipse cx="219" cy="451" rx="135" ry="18" fill="#0b352b" fill-opacity=".17"/>
-            <path d="M190 91h75l25 51v253a46 46 0 0 1-46 46h-34a46 46 0 0 1-46-46V142l26-51Z" fill="#fffcf1" stroke="#d7ead7" stroke-width="5"/>
-            <path d="M192 90V64h72v26h-72Z" fill="#f2c669"/>
-            <path d="M195 60V45c0-9 7-16 16-16h37c9 0 16 7 16 16v15h-69Z" fill="#f8d888" stroke="#e8b94a" stroke-width="5"/>
-            <path d="M164 193h126v165H164V193Z" fill="#16816a"/>
-            <path d="M164 193h126v16H164v-16Z" fill="#1f9478"/>
-            <path d="M227 232c-18 24-31 43-31 60a31 31 0 0 0 62 0c0-17-14-36-31-60Z" fill="#f5f7dc"/>
-            <path d="M227 310c0-23 9-40 26-45-3 22-10 36-26 45Z" fill="#b4e3b6"/>
-            <path d="M227 310c-2-17-10-27-24-32 1 15 9 27 24 32Z" fill="#b4e3b6"/>
-            <path d="M185 378h83" stroke="#d8ead7" stroke-linecap="round" stroke-width="5"/>
-            <path d="M179 151c-6 38-4 89-4 124" stroke="#fff" stroke-linecap="round" stroke-width="12" stroke-opacity=".8"/>
-            <path d="M103 351c-51-13-69-48-65-82 47 4 73 37 65 82Z" fill="#8fc87c"/><path d="M104 352c-12-52-6-91 13-113 31 37 23 78-13 113Z" fill="#c0d96a"/>
-            <path d="M95 394c13-75 12-114 9-151" stroke="#3e8251" stroke-width="7" stroke-linecap="round"/>
-            <path d="M310 378c49-3 77-27 83-69-42-10-79 19-83 69Z" fill="#93be75"/><path d="M307 387c-4-48 8-79 37-105 20 50 3 82-37 105Z" fill="#d3dc73"/>
-            <path d="M307 414c0-49 11-87 33-117" stroke="#438c61" stroke-width="7" stroke-linecap="round"/>
-            <circle cx="330" cy="130" r="32" fill="#f9d66e"/><path d="m313 130 11 11 22-23" stroke="#245341" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="121" cy="130" r="17" fill="#d6eeaf"/>
-          </svg>
-          <div class="float-chip chip-top"><span class="chip-icon">✦</span> Feel-good freshness</div>
-          <div class="float-chip chip-bottom"><span class="chip-icon">♥</span><span>Good things<br><strong>start fresh</strong></span></div>
-          <div class="art-caption">A LITTLE GOODNESS<br>IN EVERY DROP.</div>
+        <div class="hero-visual reveal fmv-cinema" id="fmv-cinema" data-product="milk" aria-label="Interactive 3D-style showcase of First Milk Venture dairy products">
+          <div class="fmv-cinema-lights" aria-hidden="true">
+            <span class="fmv-beam fmv-beam-left"></span>
+            <span class="fmv-beam fmv-beam-right"></span>
+            <span class="fmv-cinema-orbit orbit-one"></span>
+            <span class="fmv-cinema-orbit orbit-two"></span>
+            <span class="fmv-cinema-particle particle-one"></span>
+            <span class="fmv-cinema-particle particle-two"></span>
+            <span class="fmv-cinema-particle particle-three"></span>
+          </div>
+          <div class="fmv-3d-scene" id="fmv-3d-scene" aria-hidden="true">
+            <span class="fmv-3d-glow"></span>
+            <span class="fmv-3d-platform"></span>
+            <span class="fmv-3d-shadow"></span>
+            <div class="fmv-3d-float">
+              <div class="fmv-3d-object" id="fmv-3d-object">
+                <div class="fmv-package-cap"></div>
+                <div class="fmv-package-neck"></div>
+                <div class="fmv-package-body">
+                  <div class="fmv-package-label">
+                    <img src="assets/brand/fmv-icon.webp" width="46" height="46" alt="" loading="eager" decoding="async">
+                    <span class="fmv-package-brand">FIRST MILK<br>VENTURE</span>
+                    <span class="fmv-package-ribbon"></span>
+                    <span class="fmv-package-title" id="fmv-package-title">FARM FRESH MILK</span>
+                    <span class="fmv-package-tag">A LITTLE FRESHNESS. EVERY DAY.</span>
+                  </div>
+                </div>
+                <span class="fmv-package-glint"></span>
+              </div>
+            </div>
+          </div>
+          <div class="fmv-cinema-copy" aria-live="polite" aria-atomic="true">
+            <span class="fmv-cinema-kicker">THE FIRST MILK COLLECTION <span aria-hidden="true">✦</span> 01 / 04</span>
+            <h2 id="fmv-cinema-product-title">Farm Fresh Milk</h2>
+            <p id="fmv-cinema-product-description">A fresh beginning, beautifully bottled.</p>
+          </div>
+          <div class="fmv-product-picker" role="group" aria-label="Choose a featured dairy product">
+            <button type="button" class="fmv-product-choice" data-fmv-product="milk" aria-pressed="true">01 <span>Milk</span></button>
+            <button type="button" class="fmv-product-choice" data-fmv-product="ghee" aria-pressed="false">02 <span>Ghee</span></button>
+            <button type="button" class="fmv-product-choice" data-fmv-product="curd" aria-pressed="false">03 <span>Curd</span></button>
+            <button type="button" class="fmv-product-choice" data-fmv-product="butter" aria-pressed="false">04 <span>Butter</span></button>
+          </div>
+          <span class="fmv-cinema-instruction">CHOOSE A PRODUCT TO EXPLORE <span aria-hidden="true">↗</span></span>
         </div>
       </div>
       <a class="scroll-cue" href="#products" aria-label="Scroll to our products"><span></span> SCROLL TO DISCOVER</a>
@@ -139,10 +157,10 @@
           <p>From milk to familiar dairy essentials, discover the products that belong in your everyday routine.</p>
         </div>
         <div class="products-grid">
-          <article class="product-card card-milk reveal"><span class="card-no">01 / EVERYDAY</span><div class="product-illustration"><img class="fmv-product-art" src="assets/products/fmv-milk.svg" alt="First Milk Venture milk product illustration" width="800" height="800" loading="lazy" decoding="async"><img class="fmv-product-card-logo" src="assets/brand/fmv-logo.webp" alt="" aria-hidden="true" width="56" height="56" loading="lazy"></div><div class="product-details"><h3>Fresh Milk</h3><p>A fresh start for your day.</p><span class="card-arrow" aria-hidden="true">↗</span></div></article>
-          <article class="product-card card-curd reveal"><span class="card-no">02 / COMFORT</span><div class="product-illustration"><img class="fmv-product-art" src="assets/products/fmv-curd.svg" alt="First Milk Venture curd product illustration" width="800" height="800" loading="lazy" decoding="async"><img class="fmv-product-card-logo" src="assets/brand/fmv-logo.webp" alt="" aria-hidden="true" width="56" height="56" loading="lazy"></div><div class="product-details"><h3>Fresh Curd</h3><p>A cool, creamy everyday favourite.</p><span class="card-arrow" aria-hidden="true">↗</span></div></article>
-          <article class="product-card card-ghee reveal"><span class="card-no">03 / CLASSIC</span><div class="product-illustration"><img class="fmv-product-art" src="assets/products/fmv-ghee.svg" alt="First Milk Venture ghee product illustration" width="800" height="800" loading="lazy" decoding="async"><img class="fmv-product-card-logo" src="assets/brand/fmv-logo.webp" alt="" aria-hidden="true" width="56" height="56" loading="lazy"></div><div class="product-details"><h3>Pure Ghee</h3><p>A golden touch for favourite meals.</p><span class="card-arrow" aria-hidden="true">↗</span></div></article>
-          <article class="product-card card-butter reveal"><span class="card-no">04 / DELIGHT</span><div class="product-illustration"><img class="fmv-product-art" src="assets/products/fmv-butter.svg" alt="First Milk Venture butter product illustration" width="800" height="800" loading="lazy" decoding="async"><img class="fmv-product-card-logo" src="assets/brand/fmv-logo.webp" alt="" aria-hidden="true" width="56" height="56" loading="lazy"></div><div class="product-details"><h3>Butter</h3><p>A little extra joy at the table.</p><span class="card-arrow" aria-hidden="true">↗</span></div></article>
+          <article class="product-card card-milk reveal fmv-3d-card" data-fmv-card="milk"><span class="card-no">01 / EVERYDAY</span><div class="product-illustration"><img class="fmv-product-art" src="assets/products/fmv-milk.svg" alt="First Milk Venture milk product illustration" width="800" height="800" loading="lazy" decoding="async"><img class="fmv-product-card-logo" src="assets/brand/fmv-logo.webp" alt="" aria-hidden="true" width="56" height="56" loading="lazy"></div><div class="product-details"><h3>Fresh Milk</h3><p>A fresh start for your day.</p><span class="card-arrow" aria-hidden="true">↗</span></div><a class="fmv-product-card-link" href="https://customer.firstmilkventure.com/" aria-label="Browse milk in the customer portal"></a></article>
+          <article class="product-card card-curd reveal fmv-3d-card" data-fmv-card="curd"><span class="card-no">02 / COMFORT</span><div class="product-illustration"><img class="fmv-product-art" src="assets/products/fmv-curd.svg" alt="First Milk Venture curd product illustration" width="800" height="800" loading="lazy" decoding="async"><img class="fmv-product-card-logo" src="assets/brand/fmv-logo.webp" alt="" aria-hidden="true" width="56" height="56" loading="lazy"></div><div class="product-details"><h3>Fresh Curd</h3><p>A cool, creamy everyday favourite.</p><span class="card-arrow" aria-hidden="true">↗</span></div><a class="fmv-product-card-link" href="https://customer.firstmilkventure.com/" aria-label="Browse curd in the customer portal"></a></article>
+          <article class="product-card card-ghee reveal fmv-3d-card" data-fmv-card="ghee"><span class="card-no">03 / CLASSIC</span><div class="product-illustration"><img class="fmv-product-art" src="assets/products/fmv-ghee.svg" alt="First Milk Venture ghee product illustration" width="800" height="800" loading="lazy" decoding="async"><img class="fmv-product-card-logo" src="assets/brand/fmv-logo.webp" alt="" aria-hidden="true" width="56" height="56" loading="lazy"></div><div class="product-details"><h3>Pure Ghee</h3><p>A golden touch for favourite meals.</p><span class="card-arrow" aria-hidden="true">↗</span></div><a class="fmv-product-card-link" href="https://customer.firstmilkventure.com/" aria-label="Browse ghee in the customer portal"></a></article>
+          <article class="product-card card-butter reveal fmv-3d-card" data-fmv-card="butter"><span class="card-no">04 / DELIGHT</span><div class="product-illustration"><img class="fmv-product-art" src="assets/products/fmv-butter.svg" alt="First Milk Venture butter product illustration" width="800" height="800" loading="lazy" decoding="async"><img class="fmv-product-card-logo" src="assets/brand/fmv-logo.webp" alt="" aria-hidden="true" width="56" height="56" loading="lazy"></div><div class="product-details"><h3>Butter</h3><p>A little extra joy at the table.</p><span class="card-arrow" aria-hidden="true">↗</span></div><a class="fmv-product-card-link" href="https://customer.firstmilkventure.com/" aria-label="Browse butter in the customer portal"></a></article>
         </div>
         <div class="products-foot reveal"><p>Product availability and prices are shown in the customer portal.</p><a class="text-link" href="https://customer.firstmilkventure.com/">Browse our live catalogue <span aria-hidden="true">↗</span></a></div>
       </div>
