@@ -20,6 +20,65 @@
     butter: Object.freeze({label:'Creamy Butter',package:'CREAMY BUTTER',summary:'A golden touch for the moments you love.',number:'04'})
   });
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  // Approved published media ID paths only. Never load arbitrary editor-supplied URLs.
+  const MEDIA_PATTERN = /^\/media\/campaign\/MEDIA-[A-Za-z0-9_-]{8,100}$/;
+  const IMAGE_TYPES = new Set(['image/jpeg','image/png','image/webp']);
+  const API_ORIGIN = 'https://backend.firstmilkventure.com';
+  let productImages = {}, globalArtwork = null, activeVisual = null, activeVisualPath = '';
+  let visualGeneration = 0;
+  const mediaUrl = value => typeof value === 'string' && MEDIA_PATTERN.test(value) ? API_ORIGIN + value : '';
+  function showProductArtwork(key) {
+    const sceneVisual = productImages[key] || globalArtwork;
+    const path = sceneVisual ? mediaUrl(sceneVisual.url) : '';
+    const video = sceneVisual?.mime_type === 'video/mp4';
+    if (activeVisualPath === path && activeVisual && stage.dataset.product === key) return;
+    const generation = ++visualGeneration;
+    activeVisualPath = path;
+    if (activeVisual) { activeVisual.pause?.(); activeVisual.remove(); activeVisual = null; }
+    stage.dataset.heroImage = 'fallback';
+    if (!path) return; // Keep original CSS bottle if an editor has not published an image.
+    const asset = document.createElement(video ? 'video' : 'img');
+    asset.className = 'fmv-cinema-product-photo';
+    asset.setAttribute('aria-hidden','true');
+    if (video) {
+      asset.muted = true; asset.loop = true; asset.autoplay = true; asset.playsInline = true;
+      asset.preload = 'metadata'; asset.controls = false;
+      asset.disablePictureInPicture = true;
+    } else {
+      asset.alt = ''; asset.decoding = 'async'; asset.loading = 'eager';
+      asset.fetchPriority = key === 'milk' ? 'high' : 'auto';
+    }
+    const ready = () => {
+      if (generation !== visualGeneration || activeVisual !== asset) return;
+      stage.dataset.heroImage = 'ready';
+    };
+    asset.addEventListener(video ? 'loadeddata' : 'load', ready, {once:true});
+    asset.addEventListener('error', () => {
+      if (generation !== visualGeneration) return;
+      asset.remove(); activeVisual = null; activeVisualPath = '';
+      stage.dataset.heroImage = 'fallback';
+    }, {once:true});
+    activeVisual = asset;
+    scene.append(asset);
+    asset.src = path;
+    if (!video && asset.complete && asset.naturalWidth) ready();
+    if (video) asset.play().catch(() => {});
+  }
+  // The CMS calls this after using its safe, public content endpoint.
+  window.FMVHeroMedia = (entries={}, fallback={}) => {
+    const approved = {};
+    for (const key of ['milk','ghee','curd','butter']) {
+      const item = entries && typeof entries === 'object' ? entries[key] : null;
+      if (item && IMAGE_TYPES.has(item.mime_type) && mediaUrl(item.url)) approved[key] = item;
+    }
+    productImages = approved;
+    globalArtwork = fallback && mediaUrl(fallback.url) &&
+      (IMAGE_TYPES.has(fallback.type) || fallback.type === 'video/mp4')
+      ? {url:fallback.url,mime_type:fallback.type} : null;
+    // Reset only when media source or selected product changes.
+    showProductArtwork(stage.dataset.product || 'milk');
+  };
+
   function chooseProduct(key) {
     const data = Object.hasOwn(catalogue, key) ? catalogue[key] : null;
     if (!data) return;
@@ -32,6 +91,7 @@
     for (const button of choices) {
       button.setAttribute('aria-pressed', String(button.dataset.fmvProduct === key));
     }
+    showProductArtwork(key);
   }
   choices.forEach((button, position) => {
     button.addEventListener('click', () => chooseProduct(button.dataset.fmvProduct));
