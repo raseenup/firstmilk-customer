@@ -103,7 +103,7 @@
     const task=(async()=>{
       try{
         const response=await fetch(api+'/public/website',{
-          cache:'default',credentials:'omit',signal:AbortSignal.timeout(8000)
+          cache:'default',credentials:'omit',priority:'low',signal:AbortSignal.timeout(8000)
         });
         if(!response.ok) return;
         const site=await response.json();
@@ -127,7 +127,12 @@
     cached();
     // Revalidate in the background on each fresh page visit, so newly
     // published content appears promptly without delaying initial rendering.
-    refresh(true);
+    // Defer network revalidation until after an initial paint. Cached/public
+    // copy and the static hero remain available immediately, even if the
+    // free backend is waking up.
+    const refreshAfterPaint=()=>setTimeout(()=>refresh(true),120);
+    if('requestAnimationFrame' in window)requestAnimationFrame(refreshAfterPaint);
+    else refreshAfterPaint();
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
     window.addEventListener('pageshow',()=>refresh());
     setInterval(()=>refresh(),CHECK_INTERVAL);

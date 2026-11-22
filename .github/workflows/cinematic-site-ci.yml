@@ -31,4 +31,4 @@ jobs:
       - name: Install DOM test environment
         run: npm install --no-save --ignore-scripts jsdom@27.2.0
       - name: Check cinematic UX and marketing assistant
-        run: node --test website/tests/cinematic.test.cjs website/tests/chat.test.cjs
+        run: node --test website/tests/cinematic.test.cjs website/tests/chat.test.cjs website/tests/performance-security.test.cjs
