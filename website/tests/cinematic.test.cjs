@@ -68,3 +68,15 @@ test('all four optimized, self-hosted product photos are referenced, with origin
   assert.match(js,/const published = sceneVisual/);
   assert.match(js,/const path = published \|\| builtIn\[key\]/);
 });
+
+test('existing cinematic company film remains present, with local fast-start media and poster',()=>{
+  assert.match(page,/id="fmv-film-video"/);
+  assert.match(page,/data-src="assets\\/video\\/fmv-brand-film-720\\.mp4"/);
+  assert.match(page,/data-mobile-src="assets\\/video\\/fmv-brand-film-mobile\\.mp4"/);
+  assert.match(page,/poster="assets\\/video\\/fmv-film-poster\\.webp"/);
+  assert.match(page,/id="fmv-film-retry"/);
+  assert.match(page,/muted autoplay loop playsinline/);
+  assert.match(page,/assets\\/products\\/hero-ghee-900\\.webp/);
+  assert.match(page,/assets\\/products\\/hero-curd-900\\.webp/);
+  assert.match(page,/assets\\/products\\/hero-butter-900\\.webp/);
+});
