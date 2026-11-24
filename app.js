@@ -271,93 +271,7 @@ function setAuthTab(tab) {
   }
 }
 
-async function handleCustomerSignIn() {
-  const identifier = document.getElementById("signin-identifier").value.trim();
-  const password = document.getElementById("signin-password").value.trim();
-  const errBox = document.getElementById("signin-error");
-  errBox.classList.add("hidden");
 
-  if (!identifier || !password) {
-    errBox.textContent = "Please enter email/phone and password.";
-    errBox.classList.remove("hidden");
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/auth/signin`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier, password })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      localStorage.setItem("customer_token", data.access_token);
-      localStorage.setItem("customer_email", data.user.email);
-      localStorage.setItem("customer_name", data.user.full_name || data.user.email);
-      localStorage.setItem("customer_phone", data.user.phone || "");
-      localStorage.setItem("customer_address", data.user.address || "");
-      alert("✅ Signed in successfully!");
-      closeAuthModal();
-      checkUserSession();
-    } else {
-      errBox.textContent = data.detail || "Invalid credentials. Please check and try again.";
-      errBox.classList.remove("hidden");
-    }
-  } catch (err) {
-    // Local fallback
-    localStorage.setItem("customer_token", "jwt-local-customer");
-    localStorage.setItem("customer_email", identifier);
-    alert("✅ Signed in successfully!");
-    closeAuthModal();
-    checkUserSession();
-  }
-}
-
-async function handleCustomerSignUp() {
-  const fullName = document.getElementById("signup-fullname").value.trim();
-  const email = document.getElementById("signup-email").value.trim();
-  const phone = document.getElementById("signup-phone").value.trim();
-  const password = document.getElementById("signup-password").value.trim();
-  const address = document.getElementById("signup-address").value.trim();
-  const errBox = document.getElementById("signup-error");
-  errBox.classList.add("hidden");
-
-  if (!email || !phone || !password) {
-    errBox.textContent = "Please provide email, phone number, and custom password.";
-    errBox.classList.remove("hidden");
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/auth/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, phone, password, full_name: fullName, address })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      localStorage.setItem("customer_token", data.access_token);
-      localStorage.setItem("customer_email", email);
-      localStorage.setItem("customer_name", fullName || email);
-      localStorage.setItem("customer_phone", phone);
-      localStorage.setItem("customer_address", address);
-      alert("🎉 Account created successfully! You can sign in anytime with your custom password.");
-      closeAuthModal();
-      checkUserSession();
-    } else {
-      errBox.textContent = data.detail || "Registration failed. Please try again.";
-      errBox.classList.remove("hidden");
-    }
-  } catch (err) {
-    localStorage.setItem("customer_token", "jwt-local-customer");
-    localStorage.setItem("customer_email", email);
-    localStorage.setItem("customer_name", fullName || email);
-    localStorage.setItem("customer_address", address);
-    alert("🎉 Account created successfully!");
-    closeAuthModal();
-    checkUserSession();
-  }
-}
 
 function checkUserSession() {
   const token = localStorage.getItem("customer_token");
@@ -656,26 +570,6 @@ function changePortalLanguage(lang) {
 }
 
 // 1. Security, SSO, 2FA, Password Reset & B2B RBAC
-async function handleEnterpriseSSO(provider) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/portal/auth/sso/initiate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ provider, domain: "firstmilkventure.com" })
-    });
-    const data = await res.json();
-    localStorage.setItem("customer_token", data.access_token || "sso-jwt-token");
-    localStorage.setItem("customer_email", "sso@firstmilkventure.com");
-    localStorage.setItem("customer_name", `SSO Enterprise User (${provider})`);
-  } catch (e) {
-    localStorage.setItem("customer_token", "sso-jwt-local");
-    localStorage.setItem("customer_email", "sso@firstmilkventure.com");
-    localStorage.setItem("customer_name", `SSO User (${provider})`);
-  }
-  closeAuthModal();
-  checkUserSession();
-  alert(`🔐 Authenticated via ${provider} Single Sign-On (SSO)!`);
-}
 
 function triggerPasswordResetFlow() {
   const email = prompt("Enter your registered enterprise email for password reset verification:");

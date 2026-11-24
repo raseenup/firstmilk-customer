@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '**/*.js'
+      - 'android-app/scripts/stage.mjs'
       - 'tests/**/*.cjs'
       - 'index.html'
       - 'product-information.css'
@@ -44,4 +45,4 @@ jobs:
       - name: Install browser-test dependencies
         run: npm install --no-save jsdom@27.2.0
       - name: Run shared portal browser tests
-        run: node --test tests/official-brand.test.cjs tests/return-quality-ui.test.cjs tests/return-collection-ui.test.cjs tests/portal-core.test.cjs tests/returned-orders.test.cjs tests/product-information-ux.test.cjs website/tests/chat.test.cjs website/tests/cinematic.test.cjs
+        run: node --test tests/android-stage.test.cjs tests/official-brand.test.cjs tests/return-quality-ui.test.cjs tests/return-collection-ui.test.cjs tests/portal-core.test.cjs tests/returned-orders.test.cjs tests/product-information-ux.test.cjs website/tests/chat.test.cjs website/tests/cinematic.test.cjs
